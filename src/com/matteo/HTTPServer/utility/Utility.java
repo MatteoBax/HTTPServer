@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.ServerSocket;
+import java.security.SecureRandom;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -86,11 +87,12 @@ public class Utility {
 		
 	}
 	
-	public static String generateRandomString(int length) {
+	public static String generateSecureRandomString(int length) {
 		if(length > 0) {
+			SecureRandom secureRandom = new SecureRandom();
 			StringBuilder sb = new StringBuilder(length);
 			for(int i = 0; i < length; i++) {
-				sb.append((char)((Math.random() * (127 - 33)) + 33));
+				sb.append((char)((secureRandom.nextDouble() * (127 - 33)) + 33));
 			}
 			return sb.toString();
 		} else {
@@ -99,14 +101,15 @@ public class Utility {
 		
 	}
 	
-	public static String generateRandomString(int length, char[] toExclude) {
+	public static String generateSecureRandomString(int length, char[] toExclude) {
 		if(length > 0) {
+			SecureRandom secureRandom = new SecureRandom();
 			StringBuilder sb = new StringBuilder(length);
 			for(int i = 0; i < length; i++) {
 				char generatedChar;
 				boolean found;
 				do {
-					generatedChar = (char)((Math.random() * (127 - 33)) + 33);
+					generatedChar = (char)((secureRandom.nextDouble() * (127 - 33)) + 33); 
 					found = false;
 					for(char c : toExclude) {
 						if(generatedChar == c) {

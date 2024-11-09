@@ -96,7 +96,7 @@ public class HandleSocketConnectionThread implements Runnable {
 		final char[] toExclude = {';', '=', '\\'};
 		do {
 			found = false;
-			generatedSessionId = Utility.generateRandomString(256, toExclude);
+			generatedSessionId = Utility.generateSecureRandomString(256, toExclude);
 			synchronized(sessions) {
 				for(Session session : sessions) {
 					if(session != null && session.getSessionID().equals(generatedSessionId)) {
