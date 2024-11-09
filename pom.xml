@@ -26,7 +26,6 @@
 				<configuration>
 					<source>1.8</source>
 					<target>1.8</target>
-                	<release>8</release>
 				</configuration>
 			</plugin>
 			<!-- Build an executable JAR -->
