@@ -30,6 +30,11 @@ jobs:
           path: ~/.m2
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-m2
+      - name: Checkout Java-FastCGI-Client
+        run: |
+          git clone https://github.com/wuyunfeng/Java-FastCGI-Client.git
+          cd Java-FastCGI-Client
+          mvn clean install
       - name: Build and analyze
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
