@@ -57,12 +57,18 @@ jobs:
               </plugins>
             </build>
           </project>' > Java-FastCGI-Client/pom.xml
-
-      # Compila il progetto Java-FastCGI-Client
+          
       - name: Build Java-FastCGI-Client
         run: |
           cd Java-FastCGI-Client
           mvn clean install
+
+      - name: Clone and Build MavenUtility
+        run: |
+          git clone https://github.com/MatteoBax/MavenUtility
+          cd MavenUtility
+          mvn clean install
+          
       - name: Build and analyze
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
