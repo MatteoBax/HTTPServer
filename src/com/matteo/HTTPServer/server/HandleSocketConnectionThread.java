@@ -291,7 +291,7 @@ public class HandleSocketConnectionThread implements Runnable {
 					
 					if(requestParam.length == 2) { // richiesta HTTP/0.9 senza campo version
 						response.setHTTPversion(HTTPVersion.HTTP0_9);
-						// HTTP/0.9 supporta solo il metodo GET
+						// HTTP/0.9 supporta solo il metodo GET e non supporta gli header
 						if(method.equals("GET")) {
 							boolean found = handleFileSend(resource, request, response);
 							if(!found) {
@@ -307,7 +307,7 @@ public class HandleSocketConnectionThread implements Runnable {
 						response.setHTTPversion(httpVersion);
 						
 						response.addHeader(new Header("Date", Utility.formatDateAsUTCDateString(new Date())));
-						response.addHeader(new Header("Server", "JavaHTTPServer/version (" + System.getProperty("os.name") + " " + System.getProperty("os.arch") + ")"));
+						response.addHeader(new Header("Server", "JavaHTTPServer/" + Server.SERVER_VERSION + " (" + Server.OS_NAME + " " + Server.OS_ARCH + ")"));
 						// le uniche versioni di HTTP supportate da questo server sono la 1.0 e la 1.1, le altre le considero invalide
 						if(!httpVersion.equals(HTTPVersion.HTTP1_0) && !httpVersion.equals(HTTPVersion.HTTP1_1)) {
 							responseStatus = 505;

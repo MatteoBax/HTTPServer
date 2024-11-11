@@ -3,6 +3,7 @@ package com.matteo.HTTPServer.utility;
 import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.ServerSocket;
@@ -12,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Locale;
+import java.util.Properties;
 import java.util.TimeZone;
 
 import org.apache.tika.Tika;
@@ -21,6 +23,7 @@ import org.apache.tika.mime.MimeTypes;
 import org.overviewproject.mime_types.MimeTypeDetector;
 
 import com.matteo.HTTPServer.server.HTTPVersion;
+import com.matteo.MavenUtility.loadResourceFromClassLoader.FileResourcesUtils;
 
 /**
  * Questa classe contiene delle utility
@@ -231,5 +234,20 @@ public class Utility {
         	inputStream.reset(); // ritorno allo stato iniziale
             return false;
         }
+	}
+	
+	public static String getServerVersion() {
+		Properties prop = new Properties();
+		try {
+			InputStream is = FileResourcesUtils.getFileFromResourceAsStream(Utility.class.getClassLoader(), "version.properties");
+			prop.load(is);
+			String version = prop.getProperty("serverVersion");
+			if(version != null) {
+				return version;
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return "";
 	}
 }

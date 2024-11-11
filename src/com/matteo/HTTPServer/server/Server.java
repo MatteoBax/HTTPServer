@@ -24,6 +24,7 @@ import javax.net.ssl.SSLServerSocketFactory;
 
 import com.matteo.HTTPServer.enums.Protocol;
 import com.matteo.HTTPServer.utility.Queue;
+import com.matteo.HTTPServer.utility.Utility;
 
 /**
  * Classe Server
@@ -31,6 +32,10 @@ import com.matteo.HTTPServer.utility.Queue;
  * @author Matteo Basso
  */
 public class Server {
+	public static final String SERVER_VERSION = Utility.getServerVersion();
+	public static final String OS_NAME = System.getProperty("os.name");
+	public static final String OS_ARCH = System.getProperty("os.arch");
+	
 	private ServerSocket HTTPserverSocket;
 	private SSLServerSocket HTTPSserverSocket;
 	public static final ServerConfig serverConfig = new ServerConfig();
