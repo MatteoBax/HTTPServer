@@ -20,6 +20,8 @@ import org.apache.tika.mime.MimeTypeException;
 import org.apache.tika.mime.MimeTypes;
 import org.overviewproject.mime_types.MimeTypeDetector;
 
+import com.matteo.HTTPServer.server.HTTPVersion;
+
 /**
  * Questa classe contiene delle utility
  * 
@@ -153,24 +155,19 @@ public class Utility {
 	
 	public static String readLineFromBufferedInputStream(BufferedInputStream bi) throws IOException {
 		StringBuilder sb = new StringBuilder();
-		//ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         int c;
         boolean isNewLine = false;
         while ((c = bi.read()) != -1) {
         	
             if (isNewLine && c == '\n') {
-            	//byteArrayOutputStream.write('\r');
                 break;
             } else if (c == '\r') {
             	isNewLine = true;
             } else {
-            	//byteArrayOutputStream.write(c);
             	sb.append((char)c);
             }
             
         }
-        
-        //return byteArrayOutputStream.toString();
         return sb.toString();
 	}
 	
@@ -208,5 +205,31 @@ public class Utility {
 			}
 		}
 		return directoryToDelete.delete();
+	}
+	
+	/**
+	 * Questo metodo verifica se il traffico in ingresso è una connessione HTTPS grezza (non gestita da {@link SSLServerSocket})
+	 * 
+	 * @param inputStream l'InputStream del socket
+	 * @see <a href="https://en.wikipedia.org/wiki/Transport_Layer_Security#TLS_record">Record TLS</a>
+	 * @return {@code true} se il traffico è HTTPS grezzo, {@code false} altrimenti
+	 * @throws IOException nel caso si siano verificari errori di I/O di rete
+	 */
+	public static boolean isRawHTTPSTraffic(InputStream inputStream) throws IOException {
+		/*
+		 * Il byte 0 nel record TLS contiene il ContentType (Handshake, ChangeCipherSpec, ...)
+		 * Il byte 1 nel record TLS contiene la versione minore del protocollo
+		 */
+		inputStream.mark(2); // marco 2 byte
+		byte[] buffer = new byte[2];
+        int bytesRead = inputStream.read(buffer, 0, 2);
+        // il bitwise AND converte il byte in un unsigned int (in rete viaggiano unsigned)
+        if (bytesRead == 2 && (buffer[0] & 0xFF) == 0x16 && (buffer[1] & 0xFF) >= 0x03) { // 0x16 = HandShake, 0x03 = versione major del protocollo (progressiva)
+        	inputStream.reset(); // ritorno allo stato iniziale
+            return true;
+        } else {
+        	inputStream.reset(); // ritorno allo stato iniziale
+            return false;
+        }
 	}
 }

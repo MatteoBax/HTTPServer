@@ -30,6 +30,7 @@ import com.matteo.MavenUtility.loadResourceFromClassLoader.FileResourcesUtils;
  * @author Matteo Basso
  */
 public class HandleSocketConnectionThread implements Runnable {
+	private Server server; // l'oggetto server
 	private Queue<DataFromSocketHandler> actionQueue; // coda delle elaborazioni delle richieste verso le route create dall'utente
 	private Socket socket;
 	private Protocol protocol;
@@ -46,7 +47,8 @@ public class HandleSocketConnectionThread implements Runnable {
 	 * @param socket il socket da gestire
 	 * @param loadResourcesFromClassLoader il classLoader da dove caricare le risorse (se è null allora verranno caricate dal file system)
 	 */
-	public HandleSocketConnectionThread(Protocol protocol, Vector<Route> registeredRoutes, Queue<DataFromSocketHandler> actionQueue, Vector<Session> sessions, Socket socket, ClassLoader classLoader) {
+	public HandleSocketConnectionThread(Server server, Protocol protocol, Vector<Route> registeredRoutes, Queue<DataFromSocketHandler> actionQueue, Vector<Session> sessions, Socket socket, ClassLoader classLoader) {
+		this.server = server;
 		this.protocol = protocol;
 		this.socket = socket;
 		this.classLoader = classLoader;
@@ -261,187 +263,204 @@ public class HandleSocketConnectionThread implements Runnable {
 		Request request = null;
 		try {
 			bi = new BufferedInputStream(socket.getInputStream());
-			/*
-			 * la prima riga nel pacchetto è sempre la richiesta effettuata.
-			 * Nel protocollo HTTP/0.9 la richiesta è nel formato METODO RISORSA
-			 * nelle versioni successive è METODO RISORSA VERSIONE_PROTOCOLLO
-			 */
-			String httpRequest = Utility.readLineFromBufferedInputStream(bi);
-			// controllo se effettivamente è stata ricevuta una richiesta http valida in quanto il client potrebbe non aver mandato nulla
-			if(httpRequest != null && !httpRequest.trim().isEmpty()) {
-				String[] requestParam = httpRequest.split(" ");
-				String method = requestParam[0];
-				String resource = requestParam[1];
-				String httpVersion;
-				long contentLength = -1L;
-				
-				if(method.equals("GET")) {
-					request = new GetRequest();
-				} else if (method.equals("POST")) {
-					request = new PostRequest();
-				}
-				
-				response = new Response(socket, request);
-				
-				if(requestParam.length == 2) { // richiesta HTTP/0.9 senza campo version
-					response.setHTTPversion(HTTPVersion.HTTP0_9);
-					// HTTP/0.9 supporta solo il metodo GET
+			if(Utility.isRawHTTPSTraffic(bi)) {
+				responseStatus = 400;
+			} else {
+				/*
+				 * la prima riga nel pacchetto è sempre la richiesta effettuata.
+				 * Nel protocollo HTTP/0.9 la richiesta è nel formato METODO RISORSA
+				 * nelle versioni successive è METODO RISORSA VERSIONE_PROTOCOLLO
+				 */
+				String httpRequest = Utility.readLineFromBufferedInputStream(bi);
+				// controllo se effettivamente è stata ricevuta una richiesta http valida in quanto il client potrebbe non aver mandato nulla
+				if(httpRequest != null && !httpRequest.trim().isEmpty()) {
+					String[] requestParam = httpRequest.split(" ");
+					String method = requestParam[0];
+					String resource = requestParam[1];
+					String originalResource = resource;
+					String httpVersion;
+					long contentLength = -1L;
+					
 					if(method.equals("GET")) {
-						boolean found = handleFileSend(resource, request, response);
-						if(!found) {
-							response.status(404).send();
-						}
-					} else {
-						responseStatus = 400;
+						request = new GetRequest();
+					} else if (method.equals("POST")) {
+						request = new PostRequest();
 					}
 					
-					response.close();
-				} else if(requestParam.length == 3) { // versioni protocollo HTTP successive
-					httpVersion = requestParam[2];
-					response.setHTTPversion(httpVersion);
+					response = new Response(socket, request);
 					
-					response.addHeader(new Header("Date", Utility.formatDateAsUTCDateString(new Date())));
-					response.addHeader(new Header("Server", "JavaHTTPServer/version (" + System.getProperty("os.name") + " " + System.getProperty("os.arch") + ")"));
-					// le uniche versioni di HTTP supportate da questo server sono la 1.0 e la 1.1, le altre le considero invalide
-					if(!httpVersion.equals(HTTPVersion.HTTP1_0) && !httpVersion.equals(HTTPVersion.HTTP1_1)) {
-						responseStatus = 505;
-					} else {
-						// gli unici metodi attualmente supportati dal server sono GET e POST, gli altri li considero invalidi
-						if(method.equals("GET") || method.equals("POST")) {
-							
-							URL url = null;
-							try {
-								url = new URI("http://localhost" + resource).toURL();
-							} catch (URISyntaxException e) {
-								e.printStackTrace();
-							}
-							
-							if(url != null) {
-								resource = url.getPath(); // toglo i parametri dalla resource in modo tale da poter gestire le route
-								request.addRequestParams(getRequestParameters(url.getQuery()));
-							}
-								
-							
-							// leggo tutti gli header della richiesta
-							while(true) {
-								String line = Utility.readLineFromBufferedInputStream(bi);
-								// gli header sono separati dal body con una riga vuota
-								if(line.equals("")) {
-									break;
-								} else {
-									String headerType = line.substring(0, line.indexOf(':'));
-									String content = line.substring(line.indexOf(':') + 1).trim();
-									request.addHeader(new Header(headerType, content)); // salvo gli header
-								}
-							}
-							
-							if(request.getHeaderContent("Upgrade-Insecure-Requests") == "1" && protocol == Protocol.HTTP) {
-								// TODO
-							}
-							String contentLengthHeaderContent = request.getHeaderContent("Content-Length");
-							if(contentLengthHeaderContent != null) {
-								try {
-									contentLength = Long.parseLong(contentLengthHeaderContent);
-								} catch (NumberFormatException e) {
-									e.printStackTrace();
-								}
-							}
-								
-							if(contentLength > 0) {
-								String contentTypeHeader = request.getHeaderContent("Content-Type");
-								if(contentTypeHeader.contains("application/x-www-form-urlencoded")) {
-									ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-									
-							        int c;
-							        while (byteArrayOutputStream.size() < contentLength && (c = bi.read()) != -1) {
-							        	byteArrayOutputStream.write(c);
-							        }
-							        String body = byteArrayOutputStream.toString();
-									request.addRequestParams(getRequestParameters(body));
-								} else if(contentTypeHeader.contains("multipart/form-data")) {
-									responseStatus = 415;
-								} else {
-									// upload
-									File file = new File("prova" + Utility.getFileExtensionFromMimeType(contentTypeHeader));
-									BufferedOutputStream  bos = new BufferedOutputStream (new FileOutputStream(file));
-									byte[] buffer = new byte[4096];
-									int bytesRead;
-									long totalBytes = 0L;
-									while(totalBytes < contentLength) {
-										bytesRead = bi.read(buffer);
-										if(bytesRead != -1) {
-											bos.write(buffer, 0, bytesRead);
-											totalBytes += bytesRead;
-										} else {
-											break;
-										}
-										
-									}
-									bos.flush();
-									bos.close();
-								}
-							}
-							
-							/*
-							 * Se la risorsa richiesta è una route creata dall'utente, l'aggiungo nella coda delle elaborazioni
-							 * delle richieste della route
-							 */
-							if(registeredRoutes.contains(new Route(method, resource))) {
-								initSession(request, response);
-								DataFromSocketHandler dt = new DataFromSocketHandler(resource, request, response) ;
-								actionQueue.add(dt);
-							} else {
-								boolean found = handleFileSend(resource, request, response);
-								if(!found) {
-									responseStatus = 404;
-								}
-								
-							}
-						} else if(method.equals("HEAD")){
-							URL url = null;
-							try {
-								url = new URI("http://localhost" + resource).toURL();
-							} catch (URISyntaxException e) {
-								e.printStackTrace();
-							}
-							
-							if(url != null) {
-								resource = url.getPath(); // tolgo i parametri dalla resource
-							}
-							
-							// cerco se il file esiste e lo invio
-							resource = resource.substring(1); // rimuovo la prima /
-							if(File.separator.equals("\\")) {
-								// sostituisco il separator della resource con \ solo se il sistema operativo ha come file separator il carattere \
-								resource = resource.replace("/", "\\");
-							}
-							String documentRoot = Server.serverConfig.getDocumentRoot();
-							if(documentRoot != null) {
-								File f = new File(documentRoot + resource);
-								File f1 = new File(documentRoot + resource + "index.html");
-								if(f.isFile()) {
-									setHeaderForHeadMethod(f, response);
-								} else if (f1.isFile()) {
-									setHeaderForHeadMethod(f1, response);
-								} else {
-									response.status(404).send().close();
-								}
-							} else {
-								response.status(404).send().close();
+					if(requestParam.length == 2) { // richiesta HTTP/0.9 senza campo version
+						response.setHTTPversion(HTTPVersion.HTTP0_9);
+						// HTTP/0.9 supporta solo il metodo GET
+						if(method.equals("GET")) {
+							boolean found = handleFileSend(resource, request, response);
+							if(!found) {
+								response.status(404).send();
 							}
 						} else {
 							responseStatus = 400;
 						}
+						
+						response.close();
+					} else if(requestParam.length == 3) { // versioni protocollo HTTP successive
+						httpVersion = requestParam[2];
+						response.setHTTPversion(httpVersion);
+						
+						response.addHeader(new Header("Date", Utility.formatDateAsUTCDateString(new Date())));
+						response.addHeader(new Header("Server", "JavaHTTPServer/version (" + System.getProperty("os.name") + " " + System.getProperty("os.arch") + ")"));
+						// le uniche versioni di HTTP supportate da questo server sono la 1.0 e la 1.1, le altre le considero invalide
+						if(!httpVersion.equals(HTTPVersion.HTTP1_0) && !httpVersion.equals(HTTPVersion.HTTP1_1)) {
+							responseStatus = 505;
+						} else {
+							// gli unici metodi attualmente supportati dal server sono GET e POST, gli altri li considero invalidi
+							if(method.equals("GET") || method.equals("POST")) {
+								
+								URL url = null;
+								try {
+									url = new URI("http://localhost" + resource).toURL();
+								} catch (URISyntaxException e) {
+									e.printStackTrace();
+								}
+								
+								if(url != null) {
+									resource = url.getPath(); // toglo i parametri dalla resource in modo tale da poter gestire le route
+									request.addRequestParams(getRequestParameters(url.getQuery()));
+								}
+									
+								
+								// leggo tutti gli header della richiesta
+								while(true) {
+									String line = Utility.readLineFromBufferedInputStream(bi);
+									// gli header sono separati dal body con una riga vuota
+									if(line.equals("")) {
+										break;
+									} else {
+										String headerType = line.substring(0, line.indexOf(':'));
+										String content = line.substring(line.indexOf(':') + 1).trim();
+										request.addHeader(new Header(headerType, content)); // salvo gli header
+									}
+								}
+								
+								String hostHeader = request.getHeaderContent("Host");
+								String updateInsecureRequestHeader = request.getHeaderContent("Upgrade-Insecure-Requests");
+								
+								if(updateInsecureRequestHeader != null && updateInsecureRequestHeader.equals("1") && hostHeader != null && !hostHeader.trim().isEmpty() && protocol == Protocol.HTTP && server.usesHTTPS()) {
+									String newPath = "https://" + hostHeader.trim().substring(0, hostHeader.indexOf(":"));
+									newPath += ":" + Server.serverConfig.getHTTPS_Port() + originalResource;
+									response.redirect(newPath);
+								} else {
+									String contentLengthHeaderContent = request.getHeaderContent("Content-Length");
+									if(contentLengthHeaderContent != null) {
+										try {
+											contentLength = Long.parseLong(contentLengthHeaderContent);
+										} catch (NumberFormatException e) {
+											e.printStackTrace();
+										}
+									}
+										
+									if(contentLength > 0) {
+										String contentTypeHeader = request.getHeaderContent("Content-Type");
+										if(contentTypeHeader.contains("application/x-www-form-urlencoded")) {
+											ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+									        int c;
+									        while (byteArrayOutputStream.size() < contentLength && (c = bi.read()) != -1) {
+									        	byteArrayOutputStream.write(c);
+									        }
+									        String body = byteArrayOutputStream.toString();
+											request.addRequestParams(getRequestParameters(body));
+										} else if(contentTypeHeader.contains("multipart/form-data")) {
+											responseStatus = 415;
+										} else {
+											// upload
+											File file = new File("prova" + Utility.getFileExtensionFromMimeType(contentTypeHeader));
+											BufferedOutputStream  bos = new BufferedOutputStream (new FileOutputStream(file));
+											byte[] buffer = new byte[4096];
+											int bytesRead;
+											long totalBytes = 0L;
+											while(totalBytes < contentLength) {
+												bytesRead = bi.read(buffer);
+												if(bytesRead != -1) {
+													bos.write(buffer, 0, bytesRead);
+													totalBytes += bytesRead;
+												} else {
+													break;
+												}
+												
+											}
+											bos.flush();
+											bos.close();
+										}
+									}
+									
+									/*
+									 * Se la risorsa richiesta è una route creata dall'utente, l'aggiungo nella coda delle elaborazioni
+									 * delle richieste della route
+									 */
+									if(registeredRoutes.contains(new Route(method, resource))) {
+										initSession(request, response);
+										DataFromSocketHandler dt = new DataFromSocketHandler(resource, request, response) ;
+										actionQueue.add(dt);
+									} else {
+										boolean found = handleFileSend(resource, request, response);
+										if(!found) {
+											responseStatus = 404;
+										}
+										
+									}
+								}
+							} else if(method.equals("HEAD")){
+								URL url = null;
+								try {
+									url = new URI("http://localhost" + resource).toURL();
+								} catch (URISyntaxException e) {
+									e.printStackTrace();
+								}
+								
+								if(url != null) {
+									resource = url.getPath(); // tolgo i parametri dalla resource
+								}
+								
+								// cerco se il file esiste e lo invio
+								resource = resource.substring(1); // rimuovo la prima /
+								if(File.separator.equals("\\")) {
+									// sostituisco il separator della resource con \ solo se il sistema operativo ha come file separator il carattere \
+									resource = resource.replace("/", "\\");
+								}
+								String documentRoot = Server.serverConfig.getDocumentRoot();
+								if(documentRoot != null) {
+									File f = new File(documentRoot + resource);
+									File f1 = new File(documentRoot + resource + "index.html");
+									if(f.isFile()) {
+										setHeaderForHeadMethod(f, response);
+									} else if (f1.isFile()) {
+										setHeaderForHeadMethod(f1, response);
+									} else {
+										response.status(404).send().close();
+									}
+								} else {
+									response.status(404).send().close();
+								}
+							} else {
+								responseStatus = 400;
+							}
+						}
+					} else {
+						System.err.println("Bad request");
+						responseStatus = 500;
 					}
-				} else {
-					responseStatus = 500;
 				}
 			}
 		} catch(IOException e) {
 			e.printStackTrace();
 		} finally {
-			if(responseStatus != -1) {
-				response.status(responseStatus).send().close();
+			if(response != null) {
+				if(responseStatus != -1) {
+					response.status(responseStatus).send().close();
+				}
+			} else {
+				try {
+					socket.close();
+				} catch (IOException e) { }
 			}
 		}
 	}

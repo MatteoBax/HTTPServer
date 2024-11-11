@@ -42,6 +42,7 @@ public class Server {
 	private Thread HTTPSserverThread = null;
 	private SessionCleanerThread sessionCleanerThread = null;
 	private Process phpFastCGIserverProcess = null;
+	private Server server = this;
 	
 	/**
 	 * Costruttore del server
@@ -337,7 +338,7 @@ public class Server {
 								}
 								
 								if(socket != null) {
-									new HandleSocketConnectionThread(Protocol.HTTPS, registeredRoutes, queue, sessions, socket, classLoader);
+									new HandleSocketConnectionThread(server, Protocol.HTTPS, registeredRoutes, queue, sessions, socket, classLoader);
 								}
 								
 							}
@@ -373,7 +374,7 @@ public class Server {
 					}
 					
 					if(socket != null) {
-						new HandleSocketConnectionThread(Protocol.HTTP, registeredRoutes, queue, sessions, socket, classLoader);
+						new HandleSocketConnectionThread(server, Protocol.HTTP, registeredRoutes, queue, sessions, socket, classLoader);
 					}
 					
 				}
