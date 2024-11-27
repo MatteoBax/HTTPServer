@@ -62,8 +62,8 @@ public class RequestHandlerThread implements Runnable {
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
-			
 			dataFromSocketHandler.getResponse().close();
+			dataFromSocketHandler.getRequest().getSession().unlockIsExpiredMethod();
 		}
 	}
 }

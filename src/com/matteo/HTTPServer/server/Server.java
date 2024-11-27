@@ -77,8 +77,9 @@ public class Server {
 			}
 		}
 		
-		String documentRoot = prop.getProperty("DocumentRoot").trim();
-		if(!documentRoot.isEmpty()) {
+		String documentRoot = prop.getProperty("DocumentRoot");
+		if(documentRoot != null && !documentRoot.trim().isEmpty()) {
+			documentRoot = documentRoot.trim();
 			if(!documentRoot.endsWith(File.separator)) {
 				documentRoot += File.separator;
 			}
@@ -97,32 +98,46 @@ public class Server {
 		}
 		
 		// HTTPS
-		String httpsPortStr = prop.getProperty("HTTPS_Port").trim();
-		if(!httpsPortStr.isEmpty()) {
-			try {
-				serverConfig.setHTTPS_Port(Integer.parseInt(httpsPortStr));
-			} catch (NumberFormatException e) {
-				System.err.println("Nel file di configurazione il numero di porta https è invalido!");
+		String httpsPortStr = prop.getProperty("HTTPS_Port");
+		if(httpsPortStr != null) {
+			httpsPortStr = httpsPortStr.trim();
+			if(!httpsPortStr.isEmpty()) {
+				try {
+					serverConfig.setHTTPS_Port(Integer.parseInt(httpsPortStr));
+				} catch (NumberFormatException e) {
+					System.err.println("Nel file di configurazione il numero di porta https è invalido!");
+				}
+				
+				String SSLkeyStorePassword = prop.getProperty("SSLkeyStorePassword");
+				if(SSLkeyStorePassword != null && !SSLkeyStorePassword.isEmpty()) {
+					serverConfig.setSSLkeyStorePassword(SSLkeyStorePassword);
+				} else {
+					System.err.println("Password del keystore richiesta per poter usare HTTPS");
+				}
+				
+				String SSLkeyStorePath = prop.getProperty("SSLkeyStorePath");
+				if(SSLkeyStorePath != null && !SSLkeyStorePath.isEmpty()) {
+					serverConfig.setSSLkeyStorePath(SSLkeyStorePath);
+				} else {
+					System.err.println("Percorso del keystore richiesto per poter usare HTTPS");
+				}
 			}
-			
-			String SSLkeyStorePassword = prop.getProperty("SSLkeyStorePassword");
-			if(!SSLkeyStorePassword.isEmpty()) {
-				serverConfig.setSSLkeyStorePassword(SSLkeyStorePassword);
-			}
-			
-			String SSLkeyStorePath = prop.getProperty("SSLkeyStorePath");
-			if(!SSLkeyStorePath.isEmpty()) {
-				serverConfig.setSSLkeyStorePath(SSLkeyStorePath);
-			}
-		}
-		String phpCgiExecutablePath = prop.getProperty("PHP-CGIexecutablePath").trim();
-		if(!phpCgiExecutablePath.isEmpty()) {
-			serverConfig.setPhpCgiExecutablePath(phpCgiExecutablePath);
 		}
 		
-		String loadResourcesFromClassLoaderStr = prop.getProperty("LoadResourcesFromClassLoader").trim();
-		if(!loadResourcesFromClassLoaderStr.isEmpty()) {
-			serverConfig.setLoadResourcesFromClassLoader(Boolean.parseBoolean(loadResourcesFromClassLoaderStr));
+		String phpCgiExecutablePath = prop.getProperty("PHP-CGIexecutablePath");
+		if(phpCgiExecutablePath != null) {
+			phpCgiExecutablePath = phpCgiExecutablePath.trim();
+			if(!phpCgiExecutablePath.isEmpty()) {
+				serverConfig.setPhpCgiExecutablePath(phpCgiExecutablePath);
+			}
+		}
+		
+		String loadResourcesFromClassLoaderStr = prop.getProperty("LoadResourcesFromClassLoader");
+		if(loadResourcesFromClassLoaderStr != null) {
+			loadResourcesFromClassLoaderStr = loadResourcesFromClassLoaderStr.trim();
+			if(!loadResourcesFromClassLoaderStr.isEmpty()) {
+				serverConfig.setLoadResourcesFromClassLoader(Boolean.parseBoolean(loadResourcesFromClassLoaderStr));
+			}
 		}
 	}
 	
