@@ -24,10 +24,9 @@ public class SessionCleanerThread implements Runnable {
 					synchronized(sessions) {
 						for(int i = 0; i < sessions.size(); i++) {
 							Session session = sessions.get(i);
-							if(session.isExpired()) {
+							if(session.isIsExpiredMethodUnlocked() && session.isExpired()) {
 								session.destroy();
 								sessions.remove(i);
-								System.out.println("Removed expiried session!!!");
 								break;
 							}
 						}

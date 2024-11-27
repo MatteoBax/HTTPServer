@@ -15,7 +15,7 @@ public abstract class Request {
 	private Vector<Cookie> cookies = new Vector<Cookie>();
 	public final Vector<RequestParameter> requestParameters = new Vector<RequestParameter>();
 	private String method; // il metodo usato nella richiesta (GET, POST ....)
-	public final Session session;
+	private Session session;
 	
 	/**
 	 * 
@@ -152,7 +152,14 @@ public abstract class Request {
 	 * @param session la sessione
 	 */
 	protected void setSession(Session session) {
-		this.session.reInitClass(session);
+		this.session = session;
+	}
+	
+	/**
+	 * Restituisce la sessione associata
+	 */
+	public Session getSession() {
+		return this.session;
 	}
 	
 }

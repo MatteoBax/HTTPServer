@@ -13,6 +13,9 @@ public class Session implements Comparable<Session>{
 	protected Vector<SessionVariable> sessionVariables = new Vector<SessionVariable>();
 	private final short SESSION_DURATION = 24; // 24h 
 	private LocalDateTime expiry;
+	private boolean started = false;
+	private boolean expiryDisabled = false;
+	private boolean isIsExpiredMethodUnlocked = false;
 	
 	/**
 	 * Costruttore dell'oggetto Session
@@ -32,6 +35,18 @@ public class Session implements Comparable<Session>{
 		this.sessionID = sessionID;
 	}
 	
+	public void start() {
+		this.started = true;
+	}
+	
+	public boolean isStarted() {
+		return this.started;
+	}
+	
+	public void disableExpiry() {
+		this.expiryDisabled = true;
+	}
+	
 	/**
 	 * Restituisce l'id della sessione
 	 * 
@@ -45,8 +60,13 @@ public class Session implements Comparable<Session>{
 	 * Aggiunge una variabile di sessione (verrà aggiunta soltanto se è impostato sessionID)
 	 * 
 	 * @param sessionVariable la variabile da aggiungere
+	 * @throws RuntimeException nel caso in cui la sessione non sia stata avviata
 	 */
 	public void addSessionVariable(SessionVariable sessionVariable) {
+		if(!started) {
+			throw new RuntimeException("La sessione non è avviata!");
+		}
+		
 		if(sessionID != null && !sessionVariables.contains(sessionVariable)) {
 			sessionVariables.add(sessionVariable);
 		}
@@ -57,8 +77,13 @@ public class Session implements Comparable<Session>{
 	 * 
 	 * @param variableName il nome della variabile
 	 * @return null se la variabile non esiste, altrimenti la SessionVariable
+	 * @throws RuntimeException nel caso in cui la sessione non sia stata avviata
 	 */
 	public SessionVariable getSessionVariable(String variableName) {
+		if(!started) {
+			throw new RuntimeException("La sessione non è avviata!");
+		}
+		
 		for(SessionVariable var : sessionVariables) {
 			if(var.getName().equals(variableName)) {
 				return var;
@@ -72,8 +97,13 @@ public class Session implements Comparable<Session>{
 	 * 
 	 * @param newSessionVariable l'oggetto SessionVariable
 	 * @return <b>true</b> se è stata sovrascritta, <b>false</b> se non è stata sovrascritta in quanto non esiste
+	 * @throws RuntimeException nel caso in cui la sessione non sia stata avviata
 	 */
 	public boolean overrideSessionVariable(SessionVariable newSessionVariable) {
+		if(!started) {
+			throw new RuntimeException("La sessione non è avviata!");
+		}
+		
 		for(int i = 0; i < sessionVariables.size(); i++) {
 			if(sessionVariables.get(i).getName().equals(newSessionVariable.getName())) {
 				sessionVariables.set(i, newSessionVariable);
@@ -90,8 +120,13 @@ public class Session implements Comparable<Session>{
 	 * @param varName il nome della variabile
 	 * @param newValue il nuovo valore della variabile
 	 * @return <b>true</b> se il valore è stato cambiato, <b>false</b> se la variabile non esiste
+	 * @throws RuntimeException nel caso in cui la sessione non sia stata avviata
 	 */
 	public boolean changeSessionVariableValue(String varName, Object newValue) {
+		if(!started) {
+			throw new RuntimeException("La sessione non è avviata!");
+		}
+		
 		for(SessionVariable var : sessionVariables) {
 			if(var.getName().equals(varName)) {
 				var.setValue(newValue);
@@ -107,8 +142,13 @@ public class Session implements Comparable<Session>{
 	 * 
 	 * @param varName il nome della variabile da rimuovere
 	 * @return <b>true</b> se è stata rimossa, <b>false</b> se non è stata rimossa in quanto inesistente
+	 * @throws RuntimeException nel caso in cui la sessione non sia stata avviata
 	 */
 	public boolean removeSessionVariable(String varName) {
+		if(!started) {
+			throw new RuntimeException("La sessione non è avviata!");
+		}
+		
 		for(int i = 0; i < sessionVariables.size(); i++) {
 			if(sessionVariables.get(i).getName().equals(varName)) {
 				sessionVariables.remove(i);
@@ -127,14 +167,6 @@ public class Session implements Comparable<Session>{
 		this.expiry = LocalDateTime.now().minusMinutes(1);
 	}
 	
-	/**
-	 * Questo metodo restituice la scandenza della sessione
-	 * 
-	 * @return la scadenza della sessione
-	 */
-	protected LocalDateTime getExpiry() {
-		return this.expiry;
-	}
 	
 	/**
 	 * Questo metodo restituisce un valore booleano che indica se la sessione è scaduta o no
@@ -142,22 +174,23 @@ public class Session implements Comparable<Session>{
 	 * @return <b>true</b> se la sessione è scaduta, altrimenti <b>false</b>
 	 */
 	protected boolean isExpired() {
-		if(expiry == null) {
+		if(expiry == null || !started) {
 			return true;
+		}
+		
+		if(expiryDisabled) {
+			return false;
 		}
 		
 		return LocalDateTime.now().compareTo(expiry) >= 0;
 	}
 	
-	/**
-	 * Questo metodo ricostruisce l'oggetto
-	 * 
-	 * @param session il nuovo oggetto
-	 */
-	protected void reInitClass(Session session) {
-		this.sessionID = session.sessionID;
-		this.sessionVariables = session.sessionVariables;
-		this.expiry = session.expiry;
+	protected void unlockIsExpiredMethod() {
+		isIsExpiredMethodUnlocked = true;
+	}
+	
+	protected boolean isIsExpiredMethodUnlocked() {
+		return isIsExpiredMethodUnlocked;
 	}
 	
 	@Override

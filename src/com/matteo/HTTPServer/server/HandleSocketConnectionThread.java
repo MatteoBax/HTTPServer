@@ -101,7 +101,8 @@ public class HandleSocketConnectionThread implements Runnable {
 			generatedSessionId = Utility.generateSecureRandomString(256, toExclude);
 			synchronized(sessions) {
 				for(Session session : sessions) {
-					if(session != null && session.getSessionID().equals(generatedSessionId)) {
+					String sessionID = session.getSessionID();
+					if(session != null && sessionID != null && sessionID.equals(generatedSessionId)) {
 						found = true;
 						break;
 					}
@@ -131,8 +132,18 @@ public class HandleSocketConnectionThread implements Runnable {
 					break;
 				}
 			}
+			Session foundSession = null;
 			
-			if(sessionId == null || !sessions.contains(new Session(sessionId))) {
+			Session toCmp = new Session(sessionId);
+			if(sessionId != null && sessions.contains(toCmp)) {
+				foundSession = sessions.get(sessions.indexOf(toCmp));
+			}
+			
+			if(foundSession == null || !foundSession.isStarted()) {
+				if(foundSession != null) {
+					// se la sessione è stata trovata ed è entrato in questo if vuol dire che la sessione non è stata avviata quindi la elimino
+					foundSession.destroy();
+				}
 				// creo un cookie sessionID scaduto in modo tale da sovrascrivere quello lato client con quello nuovo
 				String expiredCookie = sessionIDHeaderName + "=; Expires=" + Utility.formatDateAsUTCDateString(new Date(0L))+ "; Path=/";
 		        response.addHeader(new Header("Set-Cookie", expiredCookie));
@@ -147,7 +158,6 @@ public class HandleSocketConnectionThread implements Runnable {
 			}
 			
 		}
-		
 		request.setSession(sessions.elementAt(sessions.indexOf(new Session(correctId))));
 		
 		response.addHeader(new Header("Set-Cookie", setCookieHeaderContent + ";Path=/"));
