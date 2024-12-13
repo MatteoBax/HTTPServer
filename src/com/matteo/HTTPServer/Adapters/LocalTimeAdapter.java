@@ -1,7 +1,6 @@
 package com.matteo.HTTPServer.Adapters;
 
 import java.io.IOException;
-import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 
