@@ -61,6 +61,7 @@ public class RequestHandlerThread implements Runnable {
 				handler.accept(dataFromSocketHandler.getRequest(), dataFromSocketHandler.getResponse()); // faccio la callback con la request e la response
 			} catch (Exception e) {
 				e.printStackTrace();
+				dataFromSocketHandler.getResponse().status(500);
 			}
 			dataFromSocketHandler.getResponse().close();
 			dataFromSocketHandler.getRequest().getSession().unlockIsExpiredMethod();
