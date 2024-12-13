@@ -14,10 +14,15 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.net.SocketException;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Vector;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.matteo.HTTPServer.Adapters.LocalDateAdapter;
+import com.matteo.HTTPServer.Adapters.LocalTimeAdapter;
 import com.matteo.HTTPServer.utility.Utility;
 import com.wuyufeng.open.client.FCGIClient;
 import com.wuyufeng.open.response.FCGIResponse;
@@ -491,7 +496,7 @@ public final class Response {
 				removeHeader("Content-Type");
 			}
 			addHeader(new Header("Content-Type", "application/json"));
-			Gson gson = new Gson();
+			Gson gson = initGson();
 			String s = buffer.toString();
 			if(sendingBoolean) {
 				if(s.equals("true")) {
@@ -515,7 +520,7 @@ public final class Response {
 			removeHeader("Content-Type");
 		}
 		addHeader(new Header("Content-Type", "application/json"));
-		Gson gson = new Gson();
+		Gson gson = initGson();
 		buffer = new StringBuilder(gson.toJson(object));
 		return this;
 	}
@@ -647,5 +652,12 @@ public final class Response {
 			addHeader(new Header("Location", newPath));
 		}
 		status(301).send().close();
+	}
+	
+	private Gson initGson() {
+		GsonBuilder builder = new GsonBuilder();
+		builder.registerTypeAdapter(LocalDate.class, new LocalDateAdapter());
+		builder.registerTypeAdapter(LocalTime.class, new LocalTimeAdapter());
+		return builder.create();
 	}
 }
