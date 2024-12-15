@@ -73,10 +73,10 @@ public class Utility {
 	}
 	
 	/**
-	 * Questo metodo verifica se una porta è libera o occupata
+	 * Questo metodo verifica se una porta Ã¨ libera o occupata
 	 * 
 	 * @param port la porta
-	 * @return <b>true</b> se la porta è libera, <b>false</b> se la porta è occupata
+	 * @return <b>true</b> se la porta Ã¨ libera, <b>false</b> se la porta Ã¨ occupata
 	 */
 	public static boolean isPortAvailable(int port) {
 		ServerSocket server = null;
@@ -213,11 +213,11 @@ public class Utility {
 	}
 	
 	/**
-	 * Questo metodo verifica se il traffico in ingresso è una connessione HTTPS grezza (non gestita da {@link SSLServerSocket})
+	 * Questo metodo verifica se il traffico in ingresso Ã¨ una connessione HTTPS grezza (non gestita da {@link SSLServerSocket})
 	 * 
 	 * @param inputStream l'InputStream del socket
 	 * @see <a href="https://en.wikipedia.org/wiki/Transport_Layer_Security#TLS_record">Record TLS</a>
-	 * @return {@code true} se il traffico è HTTPS grezzo, {@code false} altrimenti
+	 * @return {@code true} se il traffico Ã¨ HTTPS grezzo, {@code false} altrimenti
 	 * @throws IOException nel caso si siano verificari errori di I/O di rete
 	 */
 	public static boolean isRawHTTPSTraffic(InputStream inputStream) throws IOException {

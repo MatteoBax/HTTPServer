@@ -74,7 +74,7 @@ public class LogJPanel extends JPanel {
     }
     
     /**
-     * Questo metodo scrive un log nella JScrollTextPane ed è thread safe
+     * Questo metodo scrive un log nella JScrollTextPane ed Ã¨ thread safe
      * 
      * @param logType la tipologia di log
      * @param log il log

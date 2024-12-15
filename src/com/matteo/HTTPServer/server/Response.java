@@ -40,11 +40,11 @@ public final class Response {
 	private PrintWriter pw = null;
 	private StringBuilder buffer = new StringBuilder();
 	private String HTTPversion;
-	private boolean sendingBoolean = false; // indica se il dato che sta per essere inviato Ë un booleano o no
+	private boolean sendingBoolean = false; // indica se il dato che sta per essere inviato √® un booleano o no
 	private DataOutputStream outputStreamForWriteMethod = null; //outputstream per il metodo write (deve tenere aperta la connessione)
-	private boolean invokedWriteMethod = false; //indica se Ë stato invocato il metodo write
-	private boolean writedResponseHeaderWithWriteMethod = false; // indice se sono stati gi‡ scritti i response header con il metodo write
-	private boolean invokedPipeMethod = false; // indica se Ë stato invocato il metodo pipe
+	private boolean invokedWriteMethod = false; //indica se √® stato invocato il metodo write
+	private boolean writedResponseHeaderWithWriteMethod = false; // indice se sono stati gi√® scritti i response header con il metodo write
+	private boolean invokedPipeMethod = false; // indica se √® stato invocato il metodo pipe
 	/**
 	 * Costruttore della classe Response
 	 * 
@@ -60,9 +60,9 @@ public final class Response {
 		this.HTTPversion = HTTPversion;
 	}
 	/**
-	 * Controlla se Ë impostato o meno l'header Content-Type
+	 * Controlla se √® impostato o meno l'header Content-Type
 	 * 
-	 * @return <b>true</b> se Ë impostato, <b>false</b> altrimenti
+	 * @return <b>true</b> se √® impostato, <b>false</b> altrimenti
 	 */
 	private boolean isSetContentType() {
 		return getHeaderContent("Content-Type") != null;
@@ -416,8 +416,8 @@ public final class Response {
 	 * Invia la risposta al client
 	 * 
 	 * @param iSForDetectingMimeType l'inputStream per rilevare il mime type
-	 * @param isForDetectingContentLength un secondo input stream che punta alla stessa risorsa ma Ë un InputStream diverso e serve per rilevare la content length
-	 * @param isForSendingFile un terzo input stream che punta alla stessa risorsa ma Ë un InputStream diverso e serve per l'invio del file
+	 * @param isForDetectingContentLength un secondo input stream che punta alla stessa risorsa ma √® un InputStream diverso e serve per rilevare la content length
+	 * @param isForSendingFile un terzo input stream che punta alla stessa risorsa ma √® un InputStream diverso e serve per l'invio del file
 	 */
 	protected Response send(InputStream iSForDetectingMimeType, InputStream isForDetectingContentLength, InputStream isForSendingFile) {
 		try {
@@ -502,7 +502,7 @@ public final class Response {
 	}
 	
 	public Response json() {
-		if(buffer.length() != 0) { // se il buffer non Ë vuoto
+		if(buffer.length() != 0) { // se il buffer non √® vuoto
 			if(isSetContentType())  {
 				removeHeader("Content-Type");
 			}
@@ -578,7 +578,7 @@ public final class Response {
 		return this;
 	}
 	
-	// TODO nn funzioner‡ in HTTP/2
+	// TODO nn funzioner√® in HTTP/2
 	public Response pipe(InputStream inputStream) throws IOException {
 		invokedPipeMethod = true;
 		DataInputStream dataInput = new DataInputStream(inputStream);
@@ -593,7 +593,7 @@ public final class Response {
 			dataOutput.writeBytes("\r\n"); // termina il chunk
 			dataOutput.flush();
 		}
-		dataOutput.writeBytes("0\r\n\r\n"); // scrivo 0 per indicare che Ë finito lo stream
+		dataOutput.writeBytes("0\r\n\r\n"); // scrivo 0 per indicare che √® finito lo stream
 	    dataOutput.flush();
 		dataInput.close();
 		dataOutput.close();

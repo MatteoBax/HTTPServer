@@ -66,7 +66,7 @@ public class ConfigJPanel extends JPanel {
                 try {
                     portNumber = Integer.parseInt(insertedPort);
                 } catch (NumberFormatException exc) {
-                    showErrorDialog("Non Ë stato inserito un intero");
+                    showErrorDialog("Non √® stato inserito un intero");
                     return;
                 }
 
@@ -76,10 +76,10 @@ public class ConfigJPanel extends JPanel {
                     		guiVars.setPort(insertedPort);
                     		guiVars.setDocumentRoot(documentRoot);
                     	} else {
-                    		 showErrorDialog("La document root non Ë stata impostata!");
+                    		 showErrorDialog("La document root non √® stata impostata!");
                     	}
                 	} else {
-                		showErrorDialog("La porta Ë gi‡ in uso!\nSi prega di sceglierne un'altra.");
+                		showErrorDialog("La porta √® gi√® in uso!\nSi prega di sceglierne un'altra.");
                 	}
                 	
                     

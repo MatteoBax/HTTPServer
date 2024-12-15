@@ -93,10 +93,10 @@ public class Server {
 			try {
 				serverConfig.setHTTP_Port(Integer.parseInt(httpPortStr));
 			} catch (NumberFormatException e) {
-				System.err.println("Nel file di configurazione il numero di porta http Ë invalido!");
+				System.err.println("Nel file di configurazione il numero di porta http √® invalido!");
 			}
 		} else {
-			System.err.println("Nel file di configurazione il numero di porta http Ë invalido!");
+			System.err.println("Nel file di configurazione il numero di porta http √® invalido!");
 		}
 		
 		// HTTPS
@@ -107,7 +107,7 @@ public class Server {
 				try {
 					serverConfig.setHTTPS_Port(Integer.parseInt(httpsPortStr));
 				} catch (NumberFormatException e) {
-					System.err.println("Nel file di configurazione il numero di porta https Ë invalido!");
+					System.err.println("Nel file di configurazione il numero di porta https √® invalido!");
 				}
 				
 				String SSLkeyStorePassword = prop.getProperty("SSLkeyStorePassword");
@@ -247,7 +247,7 @@ public class Server {
 				System.err.println("Impossibile caricare il Keystore specificato!");
 				System.err.println("Verificare che la password sia corretta e che il Keystore non sia corrotto o inesistente");
 			} catch (NoSuchAlgorithmException e) {
-				System.err.println("L'algoritmo per verificare l'integrit‡ del Keystore non Ë stato trovato!");
+				System.err.println("L'algoritmo per verificare l'integrit√® del Keystore non √® stato trovato!");
 			} catch (CertificateException e) {
 				System.err.println("I certificati del Keystore non possono essere caricati!");
 				System.err.println("Analizzare lo stacktrace");
@@ -262,7 +262,7 @@ public class Server {
 			try {
 				keyManagerFactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
 			} catch (NoSuchAlgorithmException e) {
-				System.err.println("L'algoritmo per KeyManagerFactory non Ë supportato!");
+				System.err.println("L'algoritmo per KeyManagerFactory non √® supportato!");
 			}
 			if(keyManagerFactory != null) {
 				try {
@@ -274,7 +274,7 @@ public class Server {
 					System.err.println("Errore di inizializzazione di KeyManagerFactory\nControllare lo stacktrace");
 					e.printStackTrace();
 				} catch (NoSuchAlgorithmException e) {
-					System.err.println("L'algoritmo del Keystore non Ë disponibile!");
+					System.err.println("L'algoritmo del Keystore non √® disponibile!");
 				}
 			}
 		}
@@ -284,7 +284,7 @@ public class Server {
 			try {
 				sslContext = SSLContext.getInstance("TLS");
 			} catch (NoSuchAlgorithmException e) {
-				System.err.println("TLS non Ë supportato!");
+				System.err.println("TLS non √® supportato!");
 			}
 			
 			if(sslContext != null) {
@@ -346,8 +346,8 @@ public class Server {
 				try {
 					HTTPSserverSocket = (SSLServerSocket) sslServerSocketFactory.createServerSocket(serverConfig.getHTTPS_Port());
 				} catch (IOException e) {
-					System.err.println("Verificare che la porta HTTPS non sia gi‡ utilizzata. Se il keystore specificato non esiste, va creato con il seguente comando:");
-					System.err.println("keytool -genkeypair -v -keystore nomeKeyStore.p12 -storetype PKCS12 -keyalg RSA -keysize 2048 -storepass laPassword -validity validit‡InGG -alias JavaHTTPserver");
+					System.err.println("Verificare che la porta HTTPS non sia gi√® utilizzata. Se il keystore specificato non esiste, va creato con il seguente comando:");
+					System.err.println("keytool -genkeypair -v -keystore nomeKeyStore.p12 -storetype PKCS12 -keyalg RSA -keysize 2048 -storepass laPassword -validity validit√®InGG -alias JavaHTTPserver");
 				}
 				
 				if(HTTPSserverSocket != null) {
@@ -376,7 +376,7 @@ public class Server {
 									System.err.println("Impossibile chiudere il socket del server HTTPS");
 								}
 							} else {
-								System.out.println("Il server HTTPS Ë stato terminato!");
+								System.out.println("Il server HTTPS √® stato terminato!");
 							}
 						}
 					});
@@ -412,7 +412,7 @@ public class Server {
 						System.err.println("Impossibile chiudere il socket del server HTTP");
 					}
 				} else {
-					System.out.println("Il server HTTP Ë stato terminato!");
+					System.out.println("Il server HTTP √® stato terminato!");
 				}
 			}
 		});
@@ -421,9 +421,9 @@ public class Server {
 		
 		System.out.println("HostName server: " + InetAddress.getLocalHost().getHostName());
 		System.out.println("IP server: " + InetAddress.getLocalHost().getHostAddress());
-		System.out.println("Porta in cui Ë in ascolto il server HTTP: " + serverConfig.getHTTP_Port());
+		System.out.println("Porta in cui √® in ascolto il server HTTP: " + serverConfig.getHTTP_Port());
 		if(usesHTTPS()) {
-			System.out.println("Porta in cui Ë in ascolto il server HTTPS: " + serverConfig.getHTTPS_Port());
+			System.out.println("Porta in cui √® in ascolto il server HTTPS: " + serverConfig.getHTTPS_Port());
 		}
 	}
 	

@@ -58,14 +58,14 @@ public class Session implements Comparable<Session>{
 	}
 	
 	/**
-	 * Aggiunge una variabile di sessione (verr‡ aggiunta soltanto se Ë impostato sessionID)
+	 * Aggiunge una variabile di sessione (verr√® aggiunta soltanto se √® impostato sessionID)
 	 * 
 	 * @param sessionVariable la variabile da aggiungere
 	 * @throws RuntimeException nel caso in cui la sessione non sia stata avviata
 	 */
 	public void addSessionVariable(SessionVariable sessionVariable) {
 		if(!started) {
-			throw new RuntimeException("La sessione non Ë avviata!");
+			throw new RuntimeException("La sessione non √® avviata!");
 		}
 		
 		if(sessionID != null && !sessionVariables.contains(sessionVariable)) {
@@ -82,7 +82,7 @@ public class Session implements Comparable<Session>{
 	 */
 	public SessionVariable getSessionVariable(String variableName) {
 		if(!started) {
-			throw new RuntimeException("La sessione non Ë avviata!");
+			throw new RuntimeException("La sessione non √® avviata!");
 		}
 		
 		for(SessionVariable var : sessionVariables) {
@@ -97,12 +97,12 @@ public class Session implements Comparable<Session>{
 	 * Sovrascrive la variabile di sessione con quella nuova in base al nome dato alla variabile
 	 * 
 	 * @param newSessionVariable l'oggetto SessionVariable
-	 * @return <b>true</b> se Ë stata sovrascritta, <b>false</b> se non Ë stata sovrascritta in quanto non esiste
+	 * @return <b>true</b> se √® stata sovrascritta, <b>false</b> se non √® stata sovrascritta in quanto non esiste
 	 * @throws RuntimeException nel caso in cui la sessione non sia stata avviata
 	 */
 	public boolean overrideSessionVariable(SessionVariable newSessionVariable) {
 		if(!started) {
-			throw new RuntimeException("La sessione non Ë avviata!");
+			throw new RuntimeException("La sessione non √® avviata!");
 		}
 		
 		for(int i = 0; i < sessionVariables.size(); i++) {
@@ -120,12 +120,12 @@ public class Session implements Comparable<Session>{
 	 * 
 	 * @param varName il nome della variabile
 	 * @param newValue il nuovo valore della variabile
-	 * @return <b>true</b> se il valore Ë stato cambiato, <b>false</b> se la variabile non esiste
+	 * @return <b>true</b> se il valore √® stato cambiato, <b>false</b> se la variabile non esiste
 	 * @throws RuntimeException nel caso in cui la sessione non sia stata avviata
 	 */
 	public boolean changeSessionVariableValue(String varName, Object newValue) {
 		if(!started) {
-			throw new RuntimeException("La sessione non Ë avviata!");
+			throw new RuntimeException("La sessione non √® avviata!");
 		}
 		
 		for(SessionVariable var : sessionVariables) {
@@ -142,12 +142,12 @@ public class Session implements Comparable<Session>{
 	 * Rimuove la variabile di sessione
 	 * 
 	 * @param varName il nome della variabile da rimuovere
-	 * @return <b>true</b> se Ë stata rimossa, <b>false</b> se non Ë stata rimossa in quanto inesistente
+	 * @return <b>true</b> se √® stata rimossa, <b>false</b> se non √® stata rimossa in quanto inesistente
 	 * @throws RuntimeException nel caso in cui la sessione non sia stata avviata
 	 */
 	public boolean removeSessionVariable(String varName) {
 		if(!started) {
-			throw new RuntimeException("La sessione non Ë avviata!");
+			throw new RuntimeException("La sessione non √® avviata!");
 		}
 		
 		for(int i = 0; i < sessionVariables.size(); i++) {
@@ -171,9 +171,9 @@ public class Session implements Comparable<Session>{
 	
 	
 	/**
-	 * Questo metodo restituisce un valore booleano che indica se la sessione Ë scaduta o no
+	 * Questo metodo restituisce un valore booleano che indica se la sessione √® scaduta o no
 	 * 
-	 * @return <b>true</b> se la sessione Ë scaduta, altrimenti <b>false</b>
+	 * @return <b>true</b> se la sessione √® scaduta, altrimenti <b>false</b>
 	 */
 	protected boolean isExpired() {
 		if(expiry == null || !started || isDestroyed) {

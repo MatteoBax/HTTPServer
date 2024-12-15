@@ -34,7 +34,7 @@ public class HandleSocketConnectionThread implements Runnable {
 	private Queue<DataFromSocketHandler> actionQueue; // coda delle elaborazioni delle richieste verso le route create dall'utente
 	private Socket socket;
 	private Protocol protocol;
-	private ClassLoader classLoader; // il classLoader da dove caricare le risorse (se è null allora verranno caricate dal file system)
+	private ClassLoader classLoader; // il classLoader da dove caricare le risorse (se Ã¨ null allora verranno caricate dal file system)
 	private Vector<Route> registeredRoutes; // le route create dall'utente
 	private Vector<Session> sessions; // le sessioni aperte lato server
 	
@@ -45,7 +45,7 @@ public class HandleSocketConnectionThread implements Runnable {
 	 * @param registeredRoutes la Vector contenente le route create dall'utente tramite i metodi server.get() e server.post()
 	 * @param actionQueue coda delle elaborazioni delle richieste verso le route create dall'utente
 	 * @param socket il socket da gestire
-	 * @param classLoader il classLoader da dove caricare le risorse (se è null allora verranno caricate dal file system)
+	 * @param classLoader il classLoader da dove caricare le risorse (se Ã¨ null allora verranno caricate dal file system)
 	 */
 	public HandleSocketConnectionThread(Server server, Protocol protocol, Vector<Route> registeredRoutes, Queue<DataFromSocketHandler> actionQueue, Vector<Session> sessions, Socket socket, ClassLoader classLoader) {
 		this.server = server;
@@ -61,7 +61,7 @@ public class HandleSocketConnectionThread implements Runnable {
 	/**
 	 * Questo metodo restituisce un'ArrayList contenente i parametri della richiesta data la linea della richiesta
 	 * 
-	 * @param requestLine la linea della richiesta (il body nel caso il metodo utillizzato sia POST, altrimenti se il metodo utilizzato è GET va passata solo la parte della query dell'url)
+	 * @param requestLine la linea della richiesta (il body nel caso il metodo utillizzato sia POST, altrimenti se il metodo utilizzato Ã¨ GET va passata solo la parte della query dell'url)
 	 * @return un'ArrayList contenente i parametri della richiesta
 	 */
 	private ArrayList<RequestParameter> getRequestParameters(String requestLine) {
@@ -141,7 +141,7 @@ public class HandleSocketConnectionThread implements Runnable {
 			
 			if(foundSession == null || !foundSession.isStarted()) {
 				if(foundSession != null) {
-					// se la sessione è stata trovata ed è entrato in questo if vuol dire che la sessione non è stata avviata quindi la elimino
+					// se la sessione Ã¨ stata trovata ed Ã¨ entrato in questo if vuol dire che la sessione non Ã¨ stata avviata quindi la elimino
 					foundSession.destroy();
 				}
 				// creo un cookie sessionID scaduto in modo tale da sovrascrivere quello lato client con quello nuovo
@@ -277,12 +277,12 @@ public class HandleSocketConnectionThread implements Runnable {
 				responseStatus = 400;
 			} else {
 				/*
-				 * la prima riga nel pacchetto è sempre la richiesta effettuata.
-				 * Nel protocollo HTTP/0.9 la richiesta è nel formato METODO RISORSA
-				 * nelle versioni successive è METODO RISORSA VERSIONE_PROTOCOLLO
+				 * la prima riga nel pacchetto Ã¨ sempre la richiesta effettuata.
+				 * Nel protocollo HTTP/0.9 la richiesta Ã¨ nel formato METODO RISORSA
+				 * nelle versioni successive Ã¨ METODO RISORSA VERSIONE_PROTOCOLLO
 				 */
 				String httpRequest = Utility.readLineFromBufferedInputStream(bi);
-				// controllo se effettivamente è stata ricevuta una richiesta http valida in quanto il client potrebbe non aver mandato nulla
+				// controllo se effettivamente Ã¨ stata ricevuta una richiesta http valida in quanto il client potrebbe non aver mandato nulla
 				if(httpRequest != null && !httpRequest.trim().isEmpty()) {
 					String[] requestParam = httpRequest.split(" ");
 					String method = requestParam[0];
@@ -295,6 +295,8 @@ public class HandleSocketConnectionThread implements Runnable {
 						request = new GetRequest();
 					} else if (method.equals("POST")) {
 						request = new PostRequest();
+					} else if (method.equals("OPTIONS")) {
+						request = new OptionsRequest();
 					}
 					
 					response = new Response(socket, request);
@@ -331,7 +333,7 @@ public class HandleSocketConnectionThread implements Runnable {
 							responseStatus = 505;
 						} else {
 							// gli unici metodi attualmente supportati dal server sono GET e POST, gli altri li considero invalidi
-							if(method.equals("GET") || method.equals("POST")) {
+							if(method.equals("GET") || method.equals("POST") || method.equals("OPTIONS")) {
 								
 								URL url = null;
 								try {
@@ -370,68 +372,76 @@ public class HandleSocketConnectionThread implements Runnable {
 									}
 								}
 								
-								if(updateInsecureRequestHeader != null && updateInsecureRequestHeader.equals("1") && hostHeader != null && !hostHeader.trim().isEmpty() && protocol == Protocol.HTTP && server.usesHTTPS()) {
-									String newPath = "https://" + hostHeader.trim().substring(0, hostHeader.indexOf(":"));
-									newPath += ":" + Server.serverConfig.getHTTPS_Port() + originalResource;
-									response.redirect(newPath);
+								if(method.equals("OPTIONS")) {
+									response.addHeader(new Header("Access-Control-Allow-Methods", "HEAD, GET, POST, OPTIONS"));
+									response.addHeader(new Header("Access-Control-Allow-Headers", "Content-Type"));
+									response.addHeader(new Header("Access-Control-Max-Age", "0"));
+									response.addHeader(new Header("Connection", "Keep-Alive"));
+									response.send().close();
 								} else {
-									String contentLengthHeaderContent = request.getHeaderContent("Content-Length");
-									if(contentLengthHeaderContent != null) {
-										try {
-											contentLength = Long.parseLong(contentLengthHeaderContent);
-										} catch (NumberFormatException e) {
-											e.printStackTrace();
-										}
-									}
-										
-									if(contentLength > 0) {
-										String contentTypeHeader = request.getHeaderContent("Content-Type");
-										if(contentTypeHeader.contains("application/x-www-form-urlencoded")) {
-											ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-									        int c;
-									        while (byteArrayOutputStream.size() < contentLength && (c = bi.read()) != -1) {
-									        	byteArrayOutputStream.write(c);
-									        }
-									        String body = byteArrayOutputStream.toString();
-											request.addRequestParams(getRequestParameters(body));
-										} else if(contentTypeHeader.contains("multipart/form-data")) {
-											responseStatus = 415;
-										} else {
-											// upload
-											File file = new File("prova" + Utility.getFileExtensionFromMimeType(contentTypeHeader));
-											BufferedOutputStream  bos = new BufferedOutputStream (new FileOutputStream(file));
-											byte[] buffer = new byte[4096];
-											int bytesRead;
-											long totalBytes = 0L;
-											while(totalBytes < contentLength) {
-												bytesRead = bi.read(buffer);
-												if(bytesRead != -1) {
-													bos.write(buffer, 0, bytesRead);
-													totalBytes += bytesRead;
-												} else {
-													break;
-												}
-												
-											}
-											bos.flush();
-											bos.close();
-										}
-									}
-									
-									/*
-									 * Se la risorsa richiesta è una route creata dall'utente, l'aggiungo nella coda delle elaborazioni
-									 * delle richieste della route
-									 */
-									if(registeredRoutes.contains(new Route(method, resource))) {
-										initSession(request, response);
-										DataFromSocketHandler dt = new DataFromSocketHandler(resource, request, response) ;
-										actionQueue.add(dt);
+									if(updateInsecureRequestHeader != null && updateInsecureRequestHeader.equals("1") && hostHeader != null && !hostHeader.trim().isEmpty() && protocol == Protocol.HTTP && server.usesHTTPS()) {
+										String newPath = "https://" + hostHeader.trim().substring(0, hostHeader.indexOf(":"));
+										newPath += ":" + Server.serverConfig.getHTTPS_Port() + originalResource;
+										response.redirect(newPath);
 									} else {
-										boolean found = handleFileSend(resource, request, response);
-										if(!found) {
-											responseStatus = 404;
+										String contentLengthHeaderContent = request.getHeaderContent("Content-Length");
+										if(contentLengthHeaderContent != null) {
+											try {
+												contentLength = Long.parseLong(contentLengthHeaderContent);
+											} catch (NumberFormatException e) {
+												e.printStackTrace();
+											}
+										}
+											
+										if(contentLength > 0) {
+											String contentTypeHeader = request.getHeaderContent("Content-Type");
+											if(contentTypeHeader.contains("application/x-www-form-urlencoded")) {
+												ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+												int c;
+												while (byteArrayOutputStream.size() < contentLength && (c = bi.read()) != -1) {
+													byteArrayOutputStream.write(c);
+												}
+												String body = byteArrayOutputStream.toString();
+												request.addRequestParams(getRequestParameters(body));
+											} else if(contentTypeHeader.contains("multipart/form-data")) {
+												responseStatus = 415;
+											} else {
+												// upload
+												File file = new File("prova" + Utility.getFileExtensionFromMimeType(contentTypeHeader));
+												BufferedOutputStream  bos = new BufferedOutputStream (new FileOutputStream(file));
+												byte[] buffer = new byte[4096];
+												int bytesRead;
+												long totalBytes = 0L;
+												while(totalBytes < contentLength) {
+													bytesRead = bi.read(buffer);
+													if(bytesRead != -1) {
+														bos.write(buffer, 0, bytesRead);
+														totalBytes += bytesRead;
+													} else {
+														break;
+													}
+													
+												}
+												bos.flush();
+												bos.close();
+											}
 										}
 										
+										/*
+										 * Se la risorsa richiesta Ã¨ una route creata dall'utente, l'aggiungo nella coda delle elaborazioni
+										 * delle richieste della route
+										 */
+										if(registeredRoutes.contains(new Route(method, resource))) {
+											initSession(request, response);
+											DataFromSocketHandler dt = new DataFromSocketHandler(resource, request, response) ;
+											actionQueue.add(dt);
+										} else {
+											boolean found = handleFileSend(resource, request, response);
+											if(!found) {
+												responseStatus = 404;
+											}
+											
+										}
 									}
 								}
 							} else if(method.equals("HEAD")){

@@ -19,7 +19,7 @@ public class SessionCleanerThread implements Runnable {
 		while(!Thread.interrupted()) {
 			if(sessions.size() > 0) {
 				if(sessions.size() > MAX_SESSIONS) {
-					sessions.remove(0); // rimuovo quella più vecchia
+					sessions.remove(0); // rimuovo quella piÃ¨ vecchia
 				} else {
 					synchronized(sessions) {
 						for(int i = 0; i < sessions.size(); i++) {

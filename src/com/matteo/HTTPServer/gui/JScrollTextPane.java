@@ -24,7 +24,7 @@ public class JScrollTextPane extends JScrollPane {
 	 * 
 	 * @param width la larghezza dalla JTextPane
 	 * @param height l'altezza della JTextPane
-	 * @param editable indica se il contenuto della JTextPane può essere modificato o no
+	 * @param editable indica se il contenuto della JTextPane puÃ¨ essere modificato o no
 	 */
 	public JScrollTextPane(int width, int height, boolean editable) {
 		super();
@@ -40,7 +40,7 @@ public class JScrollTextPane extends JScrollPane {
 	}
 	
 	/**
-	 * Costruttore (il contenuto della JTextPane è modificabile)
+	 * Costruttore (il contenuto della JTextPane Ã¨ modificabile)
 	 * 
 	 * @param width la larghezza della JTextPane
 	 * @param height l'altezza della JTextPane
@@ -86,7 +86,7 @@ public class JScrollTextPane extends JScrollPane {
 	}
 	
 	/**
-	 * Aggiunge del testo in append alla JTextPane. Il colore del testo è quello di default, cioè il nero.
+	 * Aggiunge del testo in append alla JTextPane. Il colore del testo Ã¨ quello di default, cioÃ¨ il nero.
 	 * 
 	 * @param text la stringa contenente il testo
 	 */
