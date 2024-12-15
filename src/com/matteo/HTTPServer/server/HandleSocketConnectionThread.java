@@ -45,7 +45,7 @@ public class HandleSocketConnectionThread implements Runnable {
 	 * @param registeredRoutes la Vector contenente le route create dall'utente tramite i metodi server.get() e server.post()
 	 * @param actionQueue coda delle elaborazioni delle richieste verso le route create dall'utente
 	 * @param socket il socket da gestire
-	 * @param loadResourcesFromClassLoader il classLoader da dove caricare le risorse (se è null allora verranno caricate dal file system)
+	 * @param classLoader il classLoader da dove caricare le risorse (se è null allora verranno caricate dal file system)
 	 */
 	public HandleSocketConnectionThread(Server server, Protocol protocol, Vector<Route> registeredRoutes, Queue<DataFromSocketHandler> actionQueue, Vector<Session> sessions, Socket socket, ClassLoader classLoader) {
 		this.server = server;

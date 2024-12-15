@@ -15,6 +15,8 @@ import java.util.Date;
 import java.util.Locale;
 import java.util.Properties;
 import java.util.TimeZone;
+import javax.net.ssl.SSLServerSocket;
+
 
 import org.apache.tika.Tika;
 import org.apache.tika.mime.MimeType;
