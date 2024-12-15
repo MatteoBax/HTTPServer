@@ -14,6 +14,7 @@ public class Session implements Comparable<Session>{
 	private final short SESSION_DURATION = 24; // 24h 
 	private LocalDateTime expiry;
 	private boolean started = false;
+	private boolean isDestroyed = false;
 	private boolean expiryDisabled = false;
 	private boolean isIsExpiredMethodUnlocked = false;
 	
@@ -165,6 +166,7 @@ public class Session implements Comparable<Session>{
 		this.sessionID = null;
 		this.sessionVariables = null;
 		this.expiry = LocalDateTime.now().minusMinutes(1);
+		this.isDestroyed = true;
 	}
 	
 	
@@ -174,7 +176,7 @@ public class Session implements Comparable<Session>{
 	 * @return <b>true</b> se la sessione è scaduta, altrimenti <b>false</b>
 	 */
 	protected boolean isExpired() {
-		if(expiry == null || !started) {
+		if(expiry == null || !started || isDestroyed) {
 			return true;
 		}
 		
