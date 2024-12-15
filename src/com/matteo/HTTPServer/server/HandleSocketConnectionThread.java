@@ -317,7 +317,15 @@ public class HandleSocketConnectionThread implements Runnable {
 						response.setHTTPversion(httpVersion);
 						
 						response.addHeader(new Header("Date", Utility.formatDateAsUTCDateString(new Date())));
-						response.addHeader(new Header("Server", "JavaHTTPServer/" + Server.SERVER_VERSION + " (" + Server.OS_NAME + " " + Server.OS_ARCH + ")"));
+						
+						// Aggiungo gli Header di default
+						Vector<Header> defaultHeaders = server.getDefaultHeaders();
+						synchronized(defaultHeaders) {
+							for(Header defaultHeader : defaultHeaders) {
+								response.addHeader(defaultHeader);
+							}
+						}
+						
 						// le uniche versioni di HTTP supportate da questo server sono la 1.0 e la 1.1, le altre le considero invalide
 						if(!httpVersion.equals(HTTPVersion.HTTP1_0) && !httpVersion.equals(HTTPVersion.HTTP1_1)) {
 							responseStatus = 505;

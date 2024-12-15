@@ -48,6 +48,7 @@ public class Server {
 	private SessionCleanerThread sessionCleanerThread = null;
 	private Process phpFastCGIserverProcess = null;
 	private Server server = this;
+	private Vector<Header> defaultHeaders = new Vector<Header>();
 	
 	/**
 	 * Costruttore del server
@@ -139,6 +140,8 @@ public class Server {
 				serverConfig.setLoadResourcesFromClassLoader(Boolean.parseBoolean(loadResourcesFromClassLoaderStr));
 			}
 		}
+		
+		addDefaultHeaders();
 	}
 	
 	public Server(int HTTP_Port, String documentRoot) {
@@ -147,6 +150,7 @@ public class Server {
 			documentRoot += File.separator;
 		}
 		serverConfig.setDocumentRoot(documentRoot);
+		addDefaultHeaders();
 	}
 	
 	public Server(int HTTP_Port, int HTTPS_Port, String SSLkeyStorePassword, String SSLkeyStorePath, String documentRoot) {
@@ -215,6 +219,7 @@ public class Server {
 	
 	public Server(int HTTP_Port) {
 		serverConfig.setHTTP_Port(HTTP_Port);
+		addDefaultHeaders();
 	}
 	
 	public Server(int HTTP_Port, int HTTPS_Port, String SSLkeyStorePassword, String SSLkeyStorePath) {
@@ -460,5 +465,20 @@ public class Server {
 	public void post(String path, BiConsumer<Request, Response> handler) {
 		registeredRoutes.add(new Route("POST", path));
 		new RequestHandlerThread(queue, path, "POST", handler);
+	}
+	
+	public synchronized void disableCORS() {
+		Header noCorsHeader = new Header("Access-Control-Allow-Origin", "*");
+		if(!defaultHeaders.contains(noCorsHeader)) {
+			defaultHeaders.add(noCorsHeader);
+		}
+	}
+	
+	private void addDefaultHeaders() {
+		defaultHeaders.add(new Header("Server", "JavaHTTPServer/" + Server.SERVER_VERSION + " (" + Server.OS_NAME + " " + Server.OS_ARCH + ")"));
+	}
+	
+	protected Vector<Header> getDefaultHeaders() {
+		return this.defaultHeaders;
 	}
 }
