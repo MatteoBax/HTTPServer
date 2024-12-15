@@ -374,7 +374,7 @@ public class HandleSocketConnectionThread implements Runnable {
 								
 								if(method.equals("OPTIONS")) {
 									response.addHeader(new Header("Access-Control-Allow-Methods", "HEAD, GET, POST, OPTIONS"));
-									response.addHeader(new Header("Access-Control-Allow-Headers", "Content-Type"));
+									response.addHeader(new Header("Access-Control-Allow-Headers", "Content-Type, Content-Length, Upgrade-Insecure-Requests, Cookie, Host"));
 									response.addHeader(new Header("Access-Control-Max-Age", "0"));
 									response.addHeader(new Header("Connection", "Keep-Alive"));
 									response.send().close();
