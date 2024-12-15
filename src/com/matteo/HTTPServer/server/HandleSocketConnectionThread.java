@@ -362,6 +362,14 @@ public class HandleSocketConnectionThread implements Runnable {
 								String hostHeader = request.getHeaderContent("Host");
 								String updateInsecureRequestHeader = request.getHeaderContent("Upgrade-Insecure-Requests");
 								
+								// Gestisce la CORS
+								if(server.isCORSallowed()) {
+									String origin = request.getHeaderContent("Origin");
+									if(origin != null) {
+										response.overrideHeader(new Header("Access-Control-Allow-Origin", origin));
+									}
+								}
+								
 								if(updateInsecureRequestHeader != null && updateInsecureRequestHeader.equals("1") && hostHeader != null && !hostHeader.trim().isEmpty() && protocol == Protocol.HTTP && server.usesHTTPS()) {
 									String newPath = "https://" + hostHeader.trim().substring(0, hostHeader.indexOf(":"));
 									newPath += ":" + Server.serverConfig.getHTTPS_Port() + originalResource;

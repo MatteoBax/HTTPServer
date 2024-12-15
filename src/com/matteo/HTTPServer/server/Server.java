@@ -49,6 +49,7 @@ public class Server {
 	private Process phpFastCGIserverProcess = null;
 	private Server server = this;
 	private Vector<Header> defaultHeaders = new Vector<Header>();
+	private boolean allowedCORS = false;
 	
 	/**
 	 * Costruttore del server
@@ -468,10 +469,22 @@ public class Server {
 	}
 	
 	public synchronized void disableCORS() {
-		Header noCorsHeader = new Header("Access-Control-Allow-Origin", "*");
-		if(!defaultHeaders.contains(noCorsHeader)) {
-			defaultHeaders.add(noCorsHeader);
+		Header accessControlAllowOriginHeader = new Header("Access-Control-Allow-Origin", "*");
+		Header accessControlAllowCredentials = new Header("Access-Control-Allow-Credentials", "true");
+		
+		if(!defaultHeaders.contains(accessControlAllowOriginHeader)) {
+			defaultHeaders.add(accessControlAllowOriginHeader);
 		}
+		
+		if(!defaultHeaders.contains(accessControlAllowCredentials)) {
+			defaultHeaders.add(accessControlAllowCredentials);
+		}
+		
+		allowedCORS = true;
+	}
+	
+	public boolean isCORSallowed() {
+		return this.allowedCORS;
 	}
 	
 	private void addDefaultHeaders() {

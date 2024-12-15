@@ -122,6 +122,17 @@ public final class Response {
 		headers.add(header);
 	}
 	
+	public void overrideHeader(Header header) {
+		synchronized(headers) {
+			for(int i = 0; i < headers.size(); i++) {
+				Header h = headers.get(i);
+				if(h.getType().equalsIgnoreCase(header.getType())) {
+					headers.set(i, header);
+				}
+			}
+		}
+	}
+	
 	public void removeHeader(String headerName) {
 		for(int i = 0; i < headers.size(); i++) {
 			if(headers.get(i).getType().equals(headerName)) {
