@@ -377,7 +377,7 @@ public class HandleSocketConnectionThread implements Runnable {
 									response.addHeader(new Header("Access-Control-Allow-Headers", "Content-Type, Content-Length, Upgrade-Insecure-Requests, Cookie, Host"));
 									response.addHeader(new Header("Access-Control-Max-Age", "0"));
 									response.addHeader(new Header("Connection", "Keep-Alive"));
-									response.send().close();
+									response.status(204).send().close();
 								} else {
 									if(updateInsecureRequestHeader != null && updateInsecureRequestHeader.equals("1") && hostHeader != null && !hostHeader.trim().isEmpty() && protocol == Protocol.HTTP && server.usesHTTPS()) {
 										String newPath = "https://" + hostHeader.trim().substring(0, hostHeader.indexOf(":"));
