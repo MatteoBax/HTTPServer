@@ -24,7 +24,6 @@ import org.apache.tika.mime.MimeTypeException;
 import org.apache.tika.mime.MimeTypes;
 import org.overviewproject.mime_types.MimeTypeDetector;
 
-import com.matteo.HTTPServer.server.HTTPVersion;
 import com.matteo.MavenUtility.loadResourceFromClassLoader.FileResourcesUtils;
 
 /**
@@ -36,6 +35,7 @@ public class Utility {
 	
 	private static Tika tika = new Tika();
 	private static MimeTypeDetector detector = new MimeTypeDetector();
+	private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 	
 	/**
 	 * Questo methodo fa una scansione di una directory in maniera ricorsiva e restituisce tutti i file all'interno della directory
@@ -110,17 +110,17 @@ public class Utility {
 	
 	public static String generateSecureRandomString(int length, char[] toExclude) {
 		if(length > 0) {
-			SecureRandom secureRandom = new SecureRandom();
 			StringBuilder sb = new StringBuilder(length);
 			for(int i = 0; i < length; i++) {
 				char generatedChar;
 				boolean found;
 				do {
-					generatedChar = (char)((secureRandom.nextDouble() * (127 - 33)) + 33); 
+					generatedChar = (char)((SECURE_RANDOM.nextDouble() * (127 - 33)) + 33); 
 					found = false;
 					for(char c : toExclude) {
 						if(generatedChar == c) {
 							found = true;
+							break;
 						}
 					}
 				} while (found);

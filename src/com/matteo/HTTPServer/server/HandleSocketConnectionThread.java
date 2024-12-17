@@ -42,6 +42,8 @@ public class HandleSocketConnectionThread implements Runnable {
 	private ClassLoader classLoader; // il classLoader da dove caricare le risorse (se è null allora verranno caricate dal file system)
 	private Vector<Route> registeredRoutes; // le route create dall'utente
 	private Vector<Session> sessions; // le sessioni aperte lato server
+
+	private static final String SESSIONID_HEADER_NAME_PREFIX = "sessionID=";
 	
 	/**
 	 * Costruttore del thread (lo avvia)
@@ -137,20 +139,19 @@ public class HandleSocketConnectionThread implements Runnable {
 	
 	private void initSession(Request request, Response response) {
 		String correctId;
-		final String sessionIDHeaderName = "sessionID";
 		String setCookieHeaderContent = request.getHeaderContent("Cookie");
 		if(setCookieHeaderContent == null) {
 			final String id = generateUniqueSessionId();
 			Session session = new Session(id);
-			setCookieHeaderContent = sessionIDHeaderName + "=" + id;
+			setCookieHeaderContent = SESSIONID_HEADER_NAME_PREFIX + id;
 			sessions.add(session);
 			correctId = id;
 		} else {
 			String[] splittedHeader = setCookieHeaderContent.split(";");
 			String sessionId = null;
 			for (String attr : splittedHeader) {
-				if(attr.contains(sessionIDHeaderName + "=")) {
-					sessionId = attr.replaceFirst(sessionIDHeaderName + "=", "");
+				if(attr.contains(SESSIONID_HEADER_NAME_PREFIX)) {
+					sessionId = attr.replaceFirst(SESSIONID_HEADER_NAME_PREFIX, "");
 					break;
 				}
 			}
@@ -169,15 +170,15 @@ public class HandleSocketConnectionThread implements Runnable {
 					foundSession.destroy();
 				}
 				// creo un cookie sessionID scaduto in modo tale da sovrascrivere quello lato client con quello nuovo
-				String expiredCookie = sessionIDHeaderName + "=; Expires=" + Utility.formatDateAsUTCDateString(new Date(0L))+ "; Path=/";
+				String expiredCookie = SESSIONID_HEADER_NAME_PREFIX + "; Expires=" + Utility.formatDateAsUTCDateString(new Date(0L))+ "; Path=/";
 		        response.addHeader(new Header("Set-Cookie", expiredCookie));
 				final String id = generateUniqueSessionId();
 				Session session = new Session(id);
-				setCookieHeaderContent = sessionIDHeaderName + "=" + id;
+				setCookieHeaderContent = SESSIONID_HEADER_NAME_PREFIX + id;
 				sessions.add(session);
 				correctId = id;
 			} else {
-				setCookieHeaderContent = sessionIDHeaderName + "=" + sessionId;
+				setCookieHeaderContent = SESSIONID_HEADER_NAME_PREFIX + sessionId;
 				correctId = sessionId;
 			}
 			
@@ -359,7 +360,7 @@ public class HandleSocketConnectionThread implements Runnable {
 						if(!httpVersion.equals(HTTPVersion.HTTP1_0) && !httpVersion.equals(HTTPVersion.HTTP1_1)) {
 							responseStatus = 505;
 						} else {
-							// gli unici metodi attualmente supportati dal server sono GET e POST, gli altri li considero invalidi
+							// gli unici metodi attualmente supportati dal server sono GET e POST OPTIONS, gli altri li considero invalidi
 							if(method.equals("GET") || method.equals("POST") || method.equals("OPTIONS")) {
 								
 								URL url = null;
