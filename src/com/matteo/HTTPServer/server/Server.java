@@ -88,8 +88,9 @@ public class Server {
 			serverConfig.setDocumentRoot(documentRoot);
 		}
 		
-		String httpPortStr = prop.getProperty("HTTP_Port").trim();
-		if(!httpPortStr.isEmpty()) {
+		String httpPortStr = prop.getProperty("HTTP_Port");
+		if(httpPortStr != null && !httpPortStr.trim().isEmpty()) {
+			httpPortStr = httpPortStr.trim();
 			try {
 				serverConfig.setHTTP_Port(Integer.parseInt(httpPortStr));
 			} catch (NumberFormatException e) {
