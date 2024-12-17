@@ -157,9 +157,10 @@ public class HandleSocketConnectionThread implements Runnable {
 			Session foundSession = null;
 			
 			Session toCmp = new Session(sessionId);
-			
-			if(sessionId != null && sessions.contains(toCmp)) {
-				foundSession = sessions.get(sessions.indexOf(toCmp));
+			synchronized(sessions) {
+				if(sessionId != null && sessions.contains(toCmp)) {
+					foundSession = sessions.get(sessions.indexOf(toCmp));
+				}
 			}
 			
 			if(foundSession == null || !foundSession.isStarted()) {
@@ -181,7 +182,10 @@ public class HandleSocketConnectionThread implements Runnable {
 			}
 			
 		}
-		request.setSession(sessions.elementAt(sessions.indexOf(new Session(correctId))));
+		
+		synchronized(sessions) {
+			request.setSession(sessions.elementAt(sessions.indexOf(new Session(correctId))));
+		}
 		
 		response.addHeader(new Header("Set-Cookie", setCookieHeaderContent + ";Path=/"));
 	}
