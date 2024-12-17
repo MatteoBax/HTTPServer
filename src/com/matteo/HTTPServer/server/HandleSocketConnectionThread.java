@@ -16,8 +16,13 @@ import java.net.URL;
 import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Set;
 import java.util.Vector;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
+import com.google.gson.JsonParser;
 import com.matteo.HTTPServer.enums.Protocol;
 import com.matteo.HTTPServer.utility.Queue;
 import com.matteo.HTTPServer.utility.Utility;
@@ -58,6 +63,23 @@ public class HandleSocketConnectionThread implements Runnable {
 		new Thread(this).start();
 	}
 	
+	/**
+	 * Questo metodo restituisce un'ArrayList contenente i parametri della richiesta dato il body in JSON della richiesta
+	 * 
+	 * @param jsonRequest il body in JSON della richiesta
+	 * @return un'ArrayList contenente i parametri della richiesta
+	 */
+	private ArrayList<RequestParameter> getRequestParameters(JsonObject jsonRequest) {
+		ArrayList<RequestParameter> requestParameters = new ArrayList<RequestParameter>();
+		if(jsonRequest != null) {
+			Set<String> keys = jsonRequest.keySet();
+			for(String key : keys) {
+				requestParameters.add(new RequestParameter(key, jsonRequest.get(key).getAsString()));
+			}
+		}
+		return requestParameters;
+	}
+
 	/**
 	 * Questo metodo restituisce un'ArrayList contenente i parametri della richiesta data la linea della richiesta
 	 * 
@@ -135,6 +157,7 @@ public class HandleSocketConnectionThread implements Runnable {
 			Session foundSession = null;
 			
 			Session toCmp = new Session(sessionId);
+			
 			if(sessionId != null && sessions.contains(toCmp)) {
 				foundSession = sessions.get(sessions.indexOf(toCmp));
 			}
@@ -405,6 +428,22 @@ public class HandleSocketConnectionThread implements Runnable {
 												request.addRequestParams(getRequestParameters(body));
 											} else if(contentTypeHeader.contains("multipart/form-data")) {
 												responseStatus = 415;
+											} else if(contentTypeHeader.toLowerCase().contains("application/json")) {
+												ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+												int c;
+												while (byteArrayOutputStream.size() < contentLength && (c = bi.read()) != -1) {
+													byteArrayOutputStream.write(c);
+												}
+												String body = byteArrayOutputStream.toString();
+												JsonElement json = null;
+												try {
+													json = JsonParser.parseString(body);
+												} catch (JsonParseException e)  {}
+												if(json != null && json.isJsonObject()) {
+													request.addRequestParams(getRequestParameters(json.getAsJsonObject()));
+												} else {
+													response.status(400).send("Body invalido!");
+												}
 											} else {
 												// upload
 												File file = new File("prova" + Utility.getFileExtensionFromMimeType(contentTypeHeader));
