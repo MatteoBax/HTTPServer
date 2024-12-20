@@ -408,7 +408,14 @@ public class HandleSocketConnectionThread implements Runnable {
 									response.status(204).send().close();
 								} else {
 									if(updateInsecureRequestHeader != null && updateInsecureRequestHeader.equals("1") && hostHeader != null && !hostHeader.trim().isEmpty() && protocol == Protocol.HTTP && server.usesHTTPS()) {
-										String newPath = "https://" + hostHeader.trim().substring(0, hostHeader.indexOf(":"));
+										hostHeader = hostHeader.trim();
+										int index = hostHeader.indexOf(":");
+										String newPath = "https://";
+										if(index != -1) {
+											newPath += hostHeader.substring(0, index);
+										} else {
+											newPath += hostHeader;
+										}
 										newPath += ":" + Server.serverConfig.getHTTPS_Port() + originalResource;
 										response.redirect(newPath);
 									} else {
