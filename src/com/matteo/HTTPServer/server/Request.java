@@ -15,6 +15,8 @@ public abstract class Request {
 	private Vector<Cookie> cookies = new Vector<Cookie>();
 	public final Vector<RequestParameter> requestParameters = new Vector<RequestParameter>();
 	private String method; // il metodo usato nella richiesta (GET, POST ....)
+	private String HTTPversion;
+	private String resource; // la risorsa richiesta
 	private Session session;
 	
 	/**
@@ -24,6 +26,22 @@ public abstract class Request {
 	public Request(String method) {
 		this.method = method;
 		this.session = new Session();
+	}
+
+	protected void setHTTPversion(String HTTPversion) {
+		this.HTTPversion = HTTPversion;
+	}
+
+	public String getHTTPversion() {
+		return this.HTTPversion;
+	}
+
+	protected void setResource(String resource) {
+		this.resource = resource;
+	}
+
+	public String getResource() {
+		return this.resource;
 	}
 	
 	/**

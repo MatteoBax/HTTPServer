@@ -6,6 +6,8 @@ import java.io.PipedOutputStream;
 import java.io.PrintStream;
 import com.matteo.HTTPServer.enums.LogType;
 import com.matteo.HTTPServer.server.Server;
+import com.matteo.HTTPServer.server.Session;
+import com.matteo.HTTPServer.server.SessionVariable;
 
 /**
  * Classe del thread che gestisce la GUI
@@ -80,18 +82,22 @@ public class GuiThread implements Runnable {
 		}
 		
 		//Server server = new Server(Integer.parseInt(port), documentRoot, "D:\\xampp\\php\\php.exe");
-        
-		server.get("/api/login", (req, res) -> {
-			System.out.println("get request");
-			res.send("Username: " + req.getRequestParamValue("username") + "\nPassword: " + req.getRequestParamValue("password"));
-			res.close();
-		});
 		
 		server.post("/api/login", (req, res) -> {
+			Session session = req.getSession();
+			session.start();
+			session.addSessionVariable(new SessionVariable("username", req.getRequestParamValue("username")));
+			session.addSessionVariable(new SessionVariable("password", req.getRequestParamValue("password")));
 			res.send("Username: " + req.getRequestParamValue("username") + "\nPassword: " + req.getRequestParamValue("password"));
 			res.close();
 		});
 		
+		server.get("/api/showData", (req, res) -> {
+			Session session = req.getSession();
+			res.send("Username: " + session.getSessionVariable("username").getValue() + "\nPassword: " + session.getSessionVariable("password").getValue());
+			res.close();
+		});
+
 		server.get("/api/ciao", (req, res) -> {
 			res.send("CIAO").close();
 		});

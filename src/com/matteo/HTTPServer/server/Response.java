@@ -39,7 +39,7 @@ public final class Response {
 	private Request request;
 	private PrintWriter pw = null;
 	private StringBuilder buffer = new StringBuilder();
-	private String HTTPversion;
+	private String HTTPversion = HTTPVersion.HTTP1_1;
 	private boolean sendingBoolean = false; // indica se il dato che sta per essere inviato è un booleano o no
 	private DataOutputStream outputStreamForWriteMethod = null; //outputstream per il metodo write (deve tenere aperta la connessione)
 	private boolean invokedWriteMethod = false; //indica se è stato invocato il metodo write
@@ -59,6 +59,11 @@ public final class Response {
 	public void setHTTPversion(String HTTPversion) {
 		this.HTTPversion = HTTPversion;
 	}
+
+	public String getHTTPversion() {
+		return this.HTTPversion;
+	}
+
 	/**
 	 * Controlla se è impostato o meno l'header Content-Type
 	 * 
