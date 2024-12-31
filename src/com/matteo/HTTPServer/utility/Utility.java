@@ -252,4 +252,18 @@ public class Utility {
 		}
 		return "";
 	}
+
+	/**
+	 * Questo metodo permette di svuotare l'{@link InputStream}
+	 * 
+	 * @param inputStream l'inputStream da svuotare
+	 */
+	public static void clearInputStream(InputStream inputStream) {
+		int available;
+		try {
+			while((available = inputStream.available()) != 0) {
+				inputStream.skip(available);
+			}
+		} catch (IOException e) {}
+	}
 }
