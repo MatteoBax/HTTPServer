@@ -185,7 +185,20 @@ public final class Response {
 		if(!HTTPversion.equals(HTTPVersion.HTTP0_9) && !isSetContentType()) {
 			addHeader(new Header("Content-Type", "text/plain; charset=utf-8"));
 		}
-		buffer.append(string);
+
+		// converto i \n in \r\n come da protocollo
+		StringBuilder correctString = new StringBuilder(string.length());
+		char[] charArr = string.toCharArray();
+		Character precChar = null;
+		for(int i = 0; i < charArr.length; i++) {
+			if(charArr[i] == '\n' && precChar != '\r')  {
+				correctString.append("\r\n");
+			} else {
+				correctString.append(charArr[i]);
+			}
+			precChar = charArr[i];
+		}
+		buffer.append(correctString.toString());
 		return this;
 	}
 	
