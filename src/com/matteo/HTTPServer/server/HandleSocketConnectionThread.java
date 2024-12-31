@@ -60,6 +60,7 @@ public class HandleSocketConnectionThread implements Runnable {
 		methods.put("HEAD", this::handleHEAD);
 		methods.put("OPTIONS", this::handleOPTIONS);
 		methods.put("PUT", this::handlePUT);
+		methods.put("DELETE", this::handleDELETE);
 	}
 	
 	/**
@@ -724,6 +725,53 @@ public class HandleSocketConnectionThread implements Runnable {
 		}
 	}
 
+	private void handleDELETE(Request request, Response response) {
+		if(request.getHTTPversion().equals(HTTPVersion.HTTP0_9) || request.getHTTPversion().equals(HTTPVersion.HTTP1_0)) {
+			Utility.clearInputStream(bi);
+			response.status(405);
+			return;
+		}
+
+		try{
+			if(defaultRequestHandler(request, response) == DefaultRequestHandlerReturnCode.OK) {
+				String documentRoot = server.serverConfig.getDocumentRoot();
+				if(documentRoot != null) {
+					if(!documentRoot.endsWith(File.separator)) {
+						documentRoot += File.separator;
+					}
+
+					String resource = request.getResource();
+					resource = resource.substring(1); // rimuovo la prima /
+					if(File.separator.equals("\\")) {
+						// sostituisco il separator della resource con \ solo se il sistema operativo ha come file separator il carattere \
+						resource = resource.replace("/", "\\");
+					}
+					
+					File file = new File(documentRoot + resource);
+					if(file.isDirectory()) {
+						response.status(409); // TODO
+						return;
+					} else if(file.isFile()) {
+						server.deleteQueue.add(file.getAbsolutePath());
+						response.status(202).send(
+							"<html>\r\n" +
+							"	<body>\r\n" +
+							"		<h1>Eliminazione di \"" + resource + "\" accettata.</h1>\r\n" +
+							"	</body>\r\n" +
+							"</html>"
+						);
+					} else {
+						response.status(404);
+					}
+				} else {
+					response.status(405);
+				}
+			}
+		} catch (IOException e) {
+			response.status(500);
+		}
+	}
+
 	public void setHeaderForHeadMethod(File file, Response response) throws IOException {
 		response.addHeader(new Header("Content-Length", String.valueOf(file.length())));
 		response.addHeader(new Header("Last-Modified", Utility.formatDateAsUTCDateString(new Date(file.lastModified()))));
@@ -753,6 +801,10 @@ public class HandleSocketConnectionThread implements Runnable {
 			
 			case "PUT":
 				request = new PutRequest();
+				break;
+			
+			case "DELETE":
+				request = new DeleteRequest();
 				break;
 			
 			default:

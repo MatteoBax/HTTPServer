@@ -23,6 +23,7 @@ import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
 
 import com.matteo.HTTPServer.enums.Protocol;
+import com.matteo.HTTPServer.utility.DynamicQueue;
 import com.matteo.HTTPServer.utility.Queue;
 import com.matteo.HTTPServer.utility.Utility;
 
@@ -50,6 +51,7 @@ public class Server {
 	private Server server = this;
 	private Vector<Header> defaultHeaders = new Vector<Header>();
 	private boolean allowedCORS = false;
+	protected DynamicQueue<String> deleteQueue = new DynamicQueue<String>(true);
 	
 	/**
 	 * Costruttore del server
@@ -303,6 +305,10 @@ public class Server {
 	}
 	
 	public void startServer() throws IOException{
+		if(serverConfig.getDocumentRoot() != null) {
+			new ResourceDeletionThread(deleteQueue);
+		}
+
 		if(serverConfig.getPhpCgiExecutablePath() != null) {
 			File sessionSaveDir = new File("sessions");
 			if(!sessionSaveDir.isDirectory()) {
