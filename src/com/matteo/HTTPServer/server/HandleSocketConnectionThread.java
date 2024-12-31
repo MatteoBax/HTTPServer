@@ -359,7 +359,7 @@ public class HandleSocketConnectionThread implements Runnable {
 	}
 
 	private void addDefaultHeadersForOPTIONS(Response response, boolean isAPI) {
-		response.addHeader(new Header("Access-Control-Allow-Methods", "HEAD, GET, POST, OPTIONS" + ((!isAPI) ? ", PUT" : "")));
+		response.addHeader(new Header("Access-Control-Allow-Methods", "HEAD, GET, POST, OPTIONS" + ((!isAPI) ? ", PUT, DELETE" : "")));
 		response.addHeader(new Header("Access-Control-Allow-Headers", "Content-Type, Content-Length, Upgrade-Insecure-Requests, Cookie, Host"));
 		response.addHeader(new Header("Access-Control-Max-Age", "0"));
 		response.addHeader(new Header("Connection", "Keep-Alive"));
