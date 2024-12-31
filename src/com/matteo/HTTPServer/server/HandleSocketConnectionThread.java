@@ -755,10 +755,10 @@ public class HandleSocketConnectionThread implements Runnable {
 					} else if(file.isFile()) {
 						server.deleteQueue.add(file.getAbsolutePath());
 						response.status(202).send(
-							"<html>\r\n" +
-							"	<body>\r\n" +
-							"		<h1>Eliminazione di \"" + resource + "\" accettata.</h1>\r\n" +
-							"	</body>\r\n" +
+							"<html>\n" +
+							"	<body>\n" +
+							"		<h1>Eliminazione di \"" + resource + "\" accettata.</h1>\n" +
+							"	</body>\n" +
 							"</html>"
 						);
 					} else {
