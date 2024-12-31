@@ -643,6 +643,7 @@ public class HandleSocketConnectionThread implements Runnable {
 
 	private void handlePUT(Request request, Response response) {
 		if(request.getHTTPversion().equals(HTTPVersion.HTTP0_9) || request.getHTTPversion().equals(HTTPVersion.HTTP1_0)) {
+			Utility.clearInputStream(bi);
 			response.status(405);
 			return;
 		}
