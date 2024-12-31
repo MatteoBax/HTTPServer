@@ -357,8 +357,8 @@ public class HandleSocketConnectionThread implements Runnable {
 		return found;
 	}
 
-	private void addDefaultHeadersForOPTIONS(Response response) {
-		response.addHeader(new Header("Access-Control-Allow-Methods", "HEAD, GET, POST, OPTIONS, PUT"));
+	private void addDefaultHeadersForOPTIONS(Response response, boolean isAPI) {
+		response.addHeader(new Header("Access-Control-Allow-Methods", "HEAD, GET, POST, OPTIONS" + ((!isAPI) ? ", PUT" : "")));
 		response.addHeader(new Header("Access-Control-Allow-Headers", "Content-Type, Content-Length, Upgrade-Insecure-Requests, Cookie, Host"));
 		response.addHeader(new Header("Access-Control-Max-Age", "0"));
 		response.addHeader(new Header("Connection", "Keep-Alive"));
@@ -612,16 +612,21 @@ public class HandleSocketConnectionThread implements Runnable {
 		
 		try {
 			if(request.getResource().equals("*")) {
-				addDefaultHeadersForOPTIONS(response);
+				addDefaultHeadersForOPTIONS(response, false);
 				response.status(204);
 			} else if(defaultRequestHandler(request, response) == DefaultRequestHandlerReturnCode.OK) {
 				Resource resource = findAResource(request);
+				boolean isAPI = resource.isAPI();
 				ResourceExistStatus status = resource.getExistStatus();
 				if(status == ResourceExistStatus.EXIST) {
-					addDefaultHeadersForOPTIONS(response);
+					addDefaultHeadersForOPTIONS(response, isAPI);
 					response.status(204);
 				} else if (status == ResourceExistStatus.NEED_A_REDIRECT) {
-					addDefaultHeadersForOPTIONS(response);
+					/* 
+					gli dico che la resource è un'API in modo da non aggiungere i metodi HTTP non supportati (es PUT, DELETE, PATCH) 
+					dato che neanche le API li supportano
+					*/
+					addDefaultHeadersForOPTIONS(response, true);
 					response.addHeader(new Header("Location", resource.getResourcePath()));
 					response.status(301);
 				} else if (status == ResourceExistStatus.NOT_EXIST) {
