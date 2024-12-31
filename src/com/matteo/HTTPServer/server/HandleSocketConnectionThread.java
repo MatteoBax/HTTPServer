@@ -53,12 +53,13 @@ public class HandleSocketConnectionThread implements Runnable {
 	
 	private boolean handlingAnAPI = false; // indica se la richiesta in gestione è un'API
 
-	// gli unici metodi attualmente supportati dal server sono GET e POST OPTIONS, gli altri li considero invalidi
+	// gli unici metodi attualmente supportati dal server sono GET, POST, OPTIONS, PUT, gli altri li considero invalidi
 	private void initMethodsHashMap() {
 		methods.put("GET", this::handleGET);
 		methods.put("POST", this::handlePOST);
 		methods.put("HEAD", this::handleHEAD);
 		methods.put("OPTIONS", this::handleOPTIONS);
+		methods.put("PUT", this::handlePUT);
 	}
 	
 	/**
@@ -357,12 +358,13 @@ public class HandleSocketConnectionThread implements Runnable {
 	}
 
 	private void addDefaultHeadersForOPTIONS(Response response) {
-		response.addHeader(new Header("Access-Control-Allow-Methods", "HEAD, GET, POST, OPTIONS"));
+		response.addHeader(new Header("Access-Control-Allow-Methods", "HEAD, GET, POST, OPTIONS, PUT"));
 		response.addHeader(new Header("Access-Control-Allow-Headers", "Content-Type, Content-Length, Upgrade-Insecure-Requests, Cookie, Host"));
 		response.addHeader(new Header("Access-Control-Max-Age", "0"));
 		response.addHeader(new Header("Connection", "Keep-Alive"));
 		response.addHeader(new Header("Content-Length", "0"));
 	}
+
 	private DefaultRequestHandlerReturnCode defaultRequestHandler(Request request, Response response) throws IOException{
 		String resource = request.getResource();
 		String originalResource = resource;
@@ -421,7 +423,7 @@ public class HandleSocketConnectionThread implements Runnable {
 			}
 		}
 
-		if(updateInsecureRequestHeader != null && updateInsecureRequestHeader.equals("1") && hostHeader != null && !hostHeader.trim().isEmpty() && protocol == Protocol.HTTP && server.usesHTTPS()) {
+		if(!request.getMethod().equals("PUT") && updateInsecureRequestHeader != null && updateInsecureRequestHeader.equals("1") && hostHeader != null && !hostHeader.trim().isEmpty() && protocol == Protocol.HTTP && server.usesHTTPS()) {
 			hostHeader = hostHeader.trim();
 			int index = hostHeader.indexOf(":");
 			String newPath = "https://";
@@ -603,7 +605,7 @@ public class HandleSocketConnectionThread implements Runnable {
 	}
 
 	private void handleOPTIONS(Request request, Response response) {
-		if(request.getHTTPversion().equals(HTTPVersion.HTTP0_9)) {
+		if(request.getHTTPversion().equals(HTTPVersion.HTTP0_9) || request.getHTTPversion().equals(HTTPVersion.HTTP1_0)) {
 			response.status(405);
 			return;
 		}
@@ -627,6 +629,90 @@ public class HandleSocketConnectionThread implements Runnable {
 				}
 			} else {
 
+			}
+		} catch (IOException e) {
+			response.status(500);
+		}
+	}
+
+	private void handlePUT(Request request, Response response) {
+		if(request.getHTTPversion().equals(HTTPVersion.HTTP0_9) || request.getHTTPversion().equals(HTTPVersion.HTTP1_0)) {
+			response.status(405);
+			return;
+		}
+
+		try {
+			if(defaultRequestHandler(request, response) == DefaultRequestHandlerReturnCode.OK) {
+				String contentLengthStr = request.getHeaderContent("Content-Length");
+				if(contentLengthStr != null) {
+					long contentLength = -1L;
+					try {
+						contentLength = Long.parseLong(contentLengthStr);
+					} catch (NumberFormatException e) {}
+
+					if(contentLength > 0) {
+						String documentRoot = server.serverConfig.getDocumentRoot();
+						if(documentRoot != null) {
+							if(!documentRoot.endsWith(File.separator)) {
+								documentRoot += File.separator;
+							}
+
+							String resource = request.getResource();
+							resource = resource.substring(1); // rimuovo la prima /
+							if(File.separator.equals("\\")) {
+								// sostituisco il separator della resource con \ solo se il sistema operativo ha come file separator il carattere \
+								resource = resource.replace("/", "\\");
+							}
+							
+							File file = new File(documentRoot + resource);
+							if(file.isDirectory()) {
+								Utility.clearInputStream(bi);
+								response.status(409);
+								return;
+							} else if(file.isFile()) {
+								if(file.canWrite() && file.canRead()) {
+									response.status(204);
+								} else {
+									Utility.clearInputStream(bi);
+									response.status(403);
+									return;
+								}
+							} else {
+								response.status(201);
+							}
+
+							try {
+								BufferedOutputStream  bos = new BufferedOutputStream(new FileOutputStream(file));
+								byte[] buffer = new byte[4096];
+								int bytesRead;
+								long totalBytes = 0L;
+								while(totalBytes < contentLength) {
+									bytesRead = bi.read(buffer);
+									if(bytesRead != -1) {
+										bos.write(buffer, 0, bytesRead);
+										totalBytes += bytesRead;
+									} else {
+										break;
+									}
+								}
+
+								bos.flush();
+								bos.close();
+								response.addHeader(new Header("Content-Location", request.getResource()));
+							} catch (IOException e1) {
+								response.status(500);
+							}
+						} else {
+							response.status(405);
+						}
+					} else {
+						Utility.clearInputStream(bi);
+						response.status(400);
+					}
+				} else {
+					Utility.clearInputStream(bi);
+					response.status(411);
+				}
 			}
 		} catch (IOException e) {
 			response.status(500);
@@ -659,7 +745,11 @@ public class HandleSocketConnectionThread implements Runnable {
 			case "OPTIONS":
 				request = new OptionsRequest();
 				break;
-		
+			
+			case "PUT":
+				request = new PutRequest();
+				break;
+			
 			default:
 				request = null;
 				break;
