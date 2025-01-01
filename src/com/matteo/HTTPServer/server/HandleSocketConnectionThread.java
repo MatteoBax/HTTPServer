@@ -757,7 +757,7 @@ public class HandleSocketConnectionThread implements Runnable {
 						response.status(202).send(
 							"<html>\n" +
 							"	<body>\n" +
-							"		<h1>Eliminazione di \"" + resource + "\" accettata.</h1>\n" +
+							"		<h1>Eliminazione di \"" + resource.replace("\\", "/") + "\" accettata.</h1>\n" +
 							"	</body>\n" +
 							"</html>"
 						);
