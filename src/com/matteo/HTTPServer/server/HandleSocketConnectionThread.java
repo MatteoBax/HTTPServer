@@ -14,10 +14,15 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLDecoder;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Set;
+import java.util.TimeZone;
 import java.util.Vector;
 import java.util.function.BiConsumer;
 
@@ -282,7 +287,7 @@ public class HandleSocketConnectionThread implements Runnable {
 		
 		return new Resource(ResourceExistStatus.NOT_EXIST, null);
 	}
-	private boolean handleFileSend(String resource, Request request, Response response) {
+	private ResourceExistStatus handleFileSend(String resource, Request request, Response response) throws IOException {
 		final String reqResource = resource;
 		// cerco se il file esiste e lo invio
 		resource = resource.substring(1); // rimuovo la prima /
@@ -295,6 +300,10 @@ public class HandleSocketConnectionThread implements Runnable {
 					resource = resource.replace("/", "\\");
 				}
 				File f = new File(documentRoot + resource);
+				
+				if(!f.getCanonicalPath().startsWith(documentRoot)) {
+					return ResourceExistStatus.CANNOT_ACCESS;
+				}
 				File f1 = new File(documentRoot + resource + "index.html");
 				File f2 = new File(documentRoot + resource + "index.php");
 				if(f.isFile()) {
@@ -355,7 +364,7 @@ public class HandleSocketConnectionThread implements Runnable {
 		}
 		
 		
-		return found;
+		return found ? ResourceExistStatus.EXIST : ResourceExistStatus.NOT_EXIST;
 	}
 
 	private void addDefaultHeadersForOPTIONS(Response response, boolean isAPI) {
@@ -518,9 +527,15 @@ public class HandleSocketConnectionThread implements Runnable {
 			actionQueue.add(dt);
 			handlingAnAPI = true;
 		} else {
-			boolean found = handleFileSend(resource, request, response);
-			if(!found) {
-				response.status(404).send();
+			switch(handleFileSend(resource, request, response)) {
+				case NOT_EXIST:
+					response.status(404).send();
+					break;
+				case CANNOT_ACCESS:
+					response.status(403).send();
+					break;
+				default:
+					break;
 			}
 		}
 	}
@@ -529,11 +544,20 @@ public class HandleSocketConnectionThread implements Runnable {
 		// TODO
 		String resource = request.getResource();
 		if(request.getHTTPversion().equals(HTTPVersion.HTTP0_9)) {
-			boolean found = handleFileSend(resource, request, response);
-			if(!found) {
-				response.status(404).send();
+			try {
+				switch(handleFileSend(resource, request, response)) {
+					case NOT_EXIST:
+						response.status(404).send();
+						return;
+					case CANNOT_ACCESS:
+						response.status(403).send();
+						return;
+					default:
+						break;
+				}
+			} catch (IOException e) {
+				response.status(500).send();
 			}
-			return;
 		}
 
 		try {
