@@ -62,6 +62,10 @@ public class ServerConfig {
 	public short getPhpFastCGIserverPort() {
 		return this.phpFastCGIserverPort;
 	}
+
+	public boolean isPHPEnabled() {
+		return this.phpCgiExecutablePath != null;
+	}
 	
 	public boolean isLoadResourcesFromClassLoader() {
 		return loadResourcesFromClassLoader;
