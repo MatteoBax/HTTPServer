@@ -39,7 +39,7 @@ public class Server {
 	
 	private ServerSocket HTTPserverSocket;
 	private SSLServerSocket HTTPSserverSocket;
-	public static final ServerConfig serverConfig = new ServerConfig();
+	protected final ServerConfig serverConfig = new ServerConfig();
 	private ClassLoader classLoader = null;
 	private Queue<DataFromSocketHandler> queue = new Queue<DataFromSocketHandler>(500);
 	private Vector<Route> registeredRoutes = new Vector<Route>();

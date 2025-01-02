@@ -249,7 +249,7 @@ public class HandleSocketConnectionThread implements Runnable {
 
 		// cerco se il file esiste
 		resource = resource.substring(1); // rimuovo la prima /
-		String documentRoot = Server.serverConfig.getDocumentRoot();
+		String documentRoot = server.serverConfig.getDocumentRoot();
 		if(classLoader == null) {
 			if(documentRoot != null) {
 				if(File.separator.equals("\\")) {
@@ -291,7 +291,7 @@ public class HandleSocketConnectionThread implements Runnable {
 		final String reqResource = resource;
 		// cerco se il file esiste e lo invio
 		resource = resource.substring(1); // rimuovo la prima /
-		String documentRoot = Server.serverConfig.getDocumentRoot();
+		String documentRoot = server.serverConfig.getDocumentRoot();
 		boolean found = false;
 		if(classLoader == null) {
 			if(documentRoot != null) {
@@ -442,7 +442,7 @@ public class HandleSocketConnectionThread implements Runnable {
 			} else {
 				newPath += hostHeader;
 			}
-			newPath += ":" + Server.serverConfig.getHTTPS_Port() + originalResource;
+			newPath += ":" + server.serverConfig.getHTTPS_Port() + originalResource;
 			response.redirect(newPath);
 			return DefaultRequestHandlerReturnCode.REDIRECTED_REQUEST;
 		}
@@ -610,7 +610,7 @@ public class HandleSocketConnectionThread implements Runnable {
 						resource = resource.replace("/", "\\");
 					}
 
-					String documentRoot = Server.serverConfig.getDocumentRoot();
+					String documentRoot = server.serverConfig.getDocumentRoot();
 					if(documentRoot != null) {
 						File f = new File(documentRoot + resource);
 						File f1 = new File(documentRoot + resource + "index.html");
@@ -860,7 +860,7 @@ public class HandleSocketConnectionThread implements Runnable {
 					String resource = requestParam[1];
 					
 					request = initRequest(method);
-					response = new Response(socket, request);
+					response = new Response(server, socket, request);
 					
 					if(request != null) {
 						if(requestParam.length == 2) { // richiesta HTTP/0.9 senza campo version. HTTP/0.9 supporta solo il metodo GET e non supporta gli header

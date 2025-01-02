@@ -35,6 +35,7 @@ import com.wuyufeng.open.response.FCGIResponse;
 public final class Response {
 	private Vector<Header> headers = new Vector<Header>(); // gli header della response
 	private int statusCode = 200;
+	private Server server;
 	private Socket socket;
 	private Request request;
 	private PrintWriter pw = null;
@@ -48,10 +49,12 @@ public final class Response {
 	/**
 	 * Costruttore della classe Response
 	 * 
+	 * @param server il server
 	 * @param socket il socket
 	 * @param request la richiesta effettuata (mi serve per i file php)
 	 */
-	public Response(Socket socket, Request request) {
+	public Response(Server server, Socket socket, Request request) {
+		this.server = server;
 		this.socket = socket;
 		this.request = request;
 	}
@@ -230,7 +233,7 @@ public final class Response {
 		headers.clear();
 		addHeader(new Header("Date", dateHeaderContent));
 		addHeader(new Header("Server", serverHeaderContent));
-		FCGIClient client = new FCGIClient("127.0.0.1", Server.serverConfig.getPhpFastCGIserverPort(), false, 3000);
+		FCGIClient client = new FCGIClient("127.0.0.1", server.serverConfig.getPhpFastCGIserverPort(), false, 3000);
 		FCGIResponse res = client.request(getPhpFastCgiVariables(phpFile), request.getQueryStringForCGI());
 		BufferedInputStream bi = new BufferedInputStream(new ByteArrayInputStream(res.getResponseContent()));
 		int c = -1;
@@ -329,7 +332,7 @@ public final class Response {
 		}
 		
 		if(file.exists()) {
-			if(Server.serverConfig.isPHPEnabled() && file.getName().endsWith(".php")) {
+			if(server.serverConfig.isPHPEnabled() && file.getName().endsWith(".php")) {
 				sendPHPfile(file);
 			} else {
 				String mimeType = "";
