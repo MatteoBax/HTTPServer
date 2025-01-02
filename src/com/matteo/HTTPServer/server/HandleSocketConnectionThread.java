@@ -301,7 +301,9 @@ public class HandleSocketConnectionThread implements Runnable {
 				}
 				File f = new File(documentRoot + resource);
 				
-				if(!f.getCanonicalPath().startsWith(documentRoot)) {
+				if(!f.getCanonicalPath().startsWith(documentRoot.substring(0, documentRoot.length()-1))) {
+					System.err.println(f.getCanonicalPath());
+					System.err.println("DOC: " + documentRoot);
 					return ResourceExistStatus.CANNOT_ACCESS;
 				}
 				File f1 = new File(documentRoot + resource + "index.html");
