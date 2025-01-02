@@ -34,7 +34,7 @@ import com.wuyufeng.open.response.FCGIResponse;
  */
 public final class Response {
 	private Vector<Header> headers = new Vector<Header>(); // gli header della response
-	private int statusCode = 200;
+	private String status = 200 + " " + HTTPResponseStatusCodes.find(200).getDescription(); // non lancerà mai NullPointerException
 	private Server server;
 	private Socket socket;
 	private Request request;
@@ -81,16 +81,7 @@ public final class Response {
 	 * @return la stringa
 	 */
 	private String stringifyfiResponseHeader() {
-		String statusHeaderContent = getHeaderContent("Status");
-		if(statusHeaderContent != null) {
-			String[] splitted = statusHeaderContent.split(" ");
-			if(splitted.length > 0) {
-				try {
-					statusCode = Integer.parseInt(splitted[0]);
-				} catch (NumberFormatException e) {}
-			}
-		}
-		StringBuilder toWrite =  new StringBuilder("HTTP/1.1 " + statusCode + "\r\n");
+		StringBuilder toWrite =  new StringBuilder("HTTP/1.1 " + status + "\r\n");
 		
 		for(Header header : headers) {
 			toWrite.append(header.toString() + "\r\n");
@@ -172,9 +163,10 @@ public final class Response {
 	 * @return la Response
 	 */
 	public Response status(int statusCode) {
-		this.statusCode = statusCode;
+		HTTPResponseStatusCode httpStatusCode = HTTPResponseStatusCodes.find(statusCode);
+		this.status = statusCode + (httpStatusCode != null ? " " + httpStatusCode.getDescription() : "");
 		if(HTTPversion.equals(HTTPVersion.HTTP0_9) && statusCode != 200) {
-			send("<html>" + statusCode + "</html>\n");
+			send("<html>" + this.status + "</html>\n");
 		}
 		return this;
 	}
