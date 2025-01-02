@@ -336,12 +336,17 @@ public final class Response {
 				sendPHPfile(file);
 			} else {
 				String mimeType = "";
-				try {
-					mimeType = Utility.guessMimeTypeOfFile(file);
-				} catch (Exception e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+				if(file.getName().endsWith(".php")) {
+					mimeType = "text/php";
+				} else {
+					try {
+						mimeType = Utility.guessMimeTypeOfFile(file);
+					} catch (Exception e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
+
 				if(HTTPversion.equals(HTTPVersion.HTTP0_9)) {
 					if(mimeType.equals("text/html")) {
 						sendHTTP0_9(file);
