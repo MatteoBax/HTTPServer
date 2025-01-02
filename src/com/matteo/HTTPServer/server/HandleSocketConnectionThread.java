@@ -14,6 +14,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -36,6 +37,7 @@ import com.matteo.HTTPServer.enums.ResourceExistStatus;
 import com.matteo.HTTPServer.utility.Queue;
 import com.matteo.HTTPServer.utility.Utility;
 import com.matteo.MavenUtility.loadResourceFromClassLoader.FileResourcesUtils;
+import com.optimaize.langdetect.cybozu.util.Util;
 
 
 /**
@@ -302,8 +304,6 @@ public class HandleSocketConnectionThread implements Runnable {
 				File f = new File(documentRoot + resource);
 				
 				if(!f.getCanonicalPath().startsWith(documentRoot.substring(0, documentRoot.length()-1))) {
-					System.err.println(f.getCanonicalPath());
-					System.err.println("DOC: " + documentRoot);
 					return ResourceExistStatus.CANNOT_ACCESS;
 				}
 				File f1 = new File(documentRoot + resource + "index.html");
@@ -405,7 +405,7 @@ public class HandleSocketConnectionThread implements Runnable {
 		}
 		
 		if(url != null) {
-			resource = url.getPath(); // toglo i parametri dalla resource in modo tale da poter gestire le route
+			resource = URLDecoder.decode(url.getPath(), StandardCharsets.UTF_8.name()); // toglo i parametri dalla resource in modo tale da poter gestire le route
 			request.setResource(resource);
 			request.addRequestParams(getRequestParameters(url.getQuery()));
 		}
@@ -860,7 +860,6 @@ public class HandleSocketConnectionThread implements Runnable {
 					String[] requestParam = httpRequest.split(" ");
 					String method = requestParam[0];
 					String resource = requestParam[1];
-					
 					request = initRequest(method);
 					response = new Response(server, socket, request);
 					
