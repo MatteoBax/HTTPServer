@@ -224,6 +224,7 @@ public final class Response {
 	}
 	
 	private Response sendPHPfile(File phpFile) {
+		System.out.println("SENDING PHP");
 		String serverHeaderContent = getHeaderContent("Server");
 		String dateHeaderContent = getHeaderContent("Date");
 		headers.clear();
@@ -328,7 +329,7 @@ public final class Response {
 		}
 		
 		if(file.exists()) {
-			if(file.getName().endsWith(".php")) {
+			if(Server.serverConfig.isPHPEnabled() && file.getName().endsWith(".php")) {
 				sendPHPfile(file);
 			} else {
 				String mimeType = "";
