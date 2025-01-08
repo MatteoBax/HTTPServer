@@ -34,7 +34,7 @@ import com.wuyufeng.open.response.FCGIResponse;
  */
 public final class Response {
 	private Vector<Header> headers = new Vector<Header>(); // gli header della response
-	private String status = 200 + " " + HTTPResponseStatusCodes.find(200).getDescription(); // non lancerà mai NullPointerException
+	private String status = "200 OK";
 	private Server server;
 	private Socket socket;
 	private Request request;
