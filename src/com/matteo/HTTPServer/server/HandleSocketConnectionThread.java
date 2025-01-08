@@ -56,11 +56,11 @@ public class HandleSocketConnectionThread implements Runnable {
 	private Vector<Session> sessions; // le sessioni aperte lato server
 
 	private static final String SESSIONID_HEADER_NAME_PREFIX = "sessionID=";
-	private final HashMap<String, BiConsumer<Request, Response>> methods = new HashMap<String, BiConsumer<Request, Response>>();
+	//private final HashMap<String, BiConsumer<Request, Response>> methods = new HashMap<String, BiConsumer<Request, Response>>();
 	
 	private boolean handlingAnAPI = false; // indica se la richiesta in gestione è un'API
-
 	// gli unici metodi attualmente supportati dal server sono GET, POST, OPTIONS, PUT, gli altri li considero invalidi
+	/*
 	private void initMethodsHashMap() {
 		methods.put("GET", this::handleGET);
 		methods.put("POST", this::handlePOST);
@@ -68,7 +68,7 @@ public class HandleSocketConnectionThread implements Runnable {
 		methods.put("OPTIONS", this::handleOPTIONS);
 		methods.put("PUT", this::handlePUT);
 		methods.put("DELETE", this::handleDELETE);
-	}
+	}*/
 	
 	/**
 	 * Costruttore del thread (lo avvia)
@@ -87,7 +87,7 @@ public class HandleSocketConnectionThread implements Runnable {
 		this.actionQueue = actionQueue;
 		this.registeredRoutes = registeredRoutes;
 		this.sessions = sessions;
-		initMethodsHashMap();
+		//initMethodsHashMap();
 		new Thread(this).start();
 	}
 	
@@ -876,14 +876,45 @@ public class HandleSocketConnectionThread implements Runnable {
 							return;
 						}
 					}
+					
+					request.setResource(resource);
+					switch(method) {
+						case "GET":
+							handleGET(request, response);
+							break;
+						case "POST":
+							handlePOST(request, response);
+							break;
+						case "HEAD":
+							handleHEAD(request, response);
+							break;
+						case "OPTIONS":
+							handleOPTIONS(request, response);
+							break;
+						case "PUT":
+							handlePUT(request, response);
+							break;
+						case "DELETE":
+							handleDELETE(request, response);
+							break;
+						default:
+							response.status(405).send();
+							break;
+					}
 
+					/*
+					System.out.println("NORMAL TIME: " + (end - start));
+					start = System.nanoTime();
 					BiConsumer<Request, Response> requestMethodHandler = methods.get(method);
+					end = System.nanoTime();
+					hashMapTime += (end-start);
+					System.out.println("HASHMAP TIME: " + hashMapTime);
 					if(requestMethodHandler != null) {
 						request.setResource(resource);
 						requestMethodHandler.accept(request, response);
 					} else {
 						response.status(405).send();
-					}
+					}*/
 				}
 			}
 		} catch(IOException e) {
